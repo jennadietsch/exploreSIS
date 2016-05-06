@@ -2,8 +2,6 @@
 
 library(dplyr)
 
-cmh_map <- read.delim(attribution, sep = "|", header = F)
-
 # Transform
 
 cmh_map %<>%
