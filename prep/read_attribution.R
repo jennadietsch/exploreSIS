@@ -59,7 +59,8 @@ cmh_map %<>%
                                 '1182116' = 'Centra Wellness';
                                 '1181198' = 'Monroe';
                                 '1182125' = 'Woodlands'")
-         ) 
+         ) %>%
+  filter(is.na(mcaid_id) == FALSE)
 
 sub_sis <- 
 sub_sis %>% 
