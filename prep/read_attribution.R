@@ -62,9 +62,10 @@ cmh_map %<>%
          ) %>%
   filter(is.na(mcaid_id) == FALSE)
 
-sub_sis <- 
+sub_sis <-
 sub_sis %>% 
   left_join(cmh_map, by = "mcaid_id") %>%
+  distinct() %>%
   select(sis_id:mcaid_id,cmhsp_id:cmhsp_nm,agency,
          interviewer_orig,interviewer,current_int,
          sis_cl_st,
