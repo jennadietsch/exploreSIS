@@ -19,7 +19,7 @@
 
 # Define begin & due dates
   begin <- as.Date("2014/07/01")
-  due <- as.Date("2017/9/30")
+  due <- as.Date("2017/6/30")
 
 # Load de-identified data
   scrub_sis <- read.csv("data/scrub_sis.csv")
