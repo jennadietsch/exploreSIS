@@ -69,11 +69,12 @@
            agency = sis_int_agency_nm,
            sis_cl_st,
            sis_date = sis_completed_dt,
-           start, end, duration, 
-           DaysSince, 
+           start, end, duration, DaysSince, 
+           ReasonCompleted, InterviewSetting,
+           IndividualParticipation,
            age = ClientAge, gender = sis_cl_sex_cd, 
            LivingSituation,
-           sis_sup1_name,sis_sup1_reln_typ_cd,
+           sis_sup1_reln_typ_cd, sis_res1_reln_typ_cd,
            homeliving_std = s1a_Score_Standard,
            homeliving_pct = s1a_Score_Percent,
            commliving_std = s1b_Score_Standard,
@@ -166,5 +167,5 @@
     
 # Get rid on the non-essentials
     
-    rm(redact); rm(current)
+    rm(current)
     
