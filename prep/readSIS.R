@@ -12,7 +12,8 @@
 # Filter Status == Completed 
   sis <- sis_full %>% tbl_df %>% filter(Status %in% c("Completed","Completed-Locked"))
 # Remove text fields
-  sis <- sis[, -(grep(paste0( "notes" , "$" ) , colnames(sis_full),perl = TRUE) ) ]
+  sis <- sis[, -(grep(paste0("notes","$","|","PageNotes","$"),
+                      colnames(sis_full), perl = TRUE))]
   
 # Convert all date/time to POSIXct format
   library(lubridate)
