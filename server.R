@@ -1267,35 +1267,56 @@
           print(paste0("Error.  Unrecognized input.")) 
            
         
-        d3heatmap(heat, 
-                  colors = "Blues",
-                  k_row = input$need_rows, k_col = input$need_cols,
-                  theme = "",
-                  yaxis_font_size =  "0pt",
-                  show_grid = F)
+        withProgress(message = 'Creating heatmap...',
+                     detail = 'Clustering can take awhile...',
+                     value = 0.1, 
+                     {d3heatmap(heat, 
+                                colors = "Blues",
+                                k_row = input$need_rows, 
+                                k_col = input$need_cols,
+                                theme = "",
+                                yaxis_font_size =  "0pt",
+                                show_grid = F)
+                     })
         
       })
       
       output$dt_datqual <- renderDataTable({
         
+        is_current <- if(input$current == "Current assessors") {
+          c(TRUE)
+        } else if(input$current == "All Assessors") {
+          c(TRUE, FALSE)
+        } else print(paste0("Error.  Unrecognized input."))
+        
         if ( input$agency == "All" ) {
           mia <-
             sisInput() %>%
+            filter(current_int %in% is_current) %>%
             group_by(interviewer) %>%
             summarize(unmatch_mcaid = sum(is.na(cmhsp_id)), # cmhsp_id is NA when no match found
                       miss_start = sum(as.numeric(hour(start) %in% c(0, NA))),
                       miss_end = sum(as.numeric(hour(end) %in% c(0, NA))),
+                      miss_reason = sum(is.na(ReasonCompleted)),
                       miss_liv = sum(is.na(LivingSituation)),
+                      miss_setting = sum(is.na(InterviewSetting)),
+                      miss_supports = sum(is.na(sis_sup1_reln_typ_cd)),
+                      miss_respond = sum(is.na(sis_res1_reln_typ_cd)),
                       not_mich = sum(as.numeric(sis_cl_st != "MI")))
         } else if ( input$agency %in% levels(unique(scrub_sis$agency)) ) {
           mia <-
             sisInput() %>%
+            filter(current_int %in% is_current) %>%
             filter(agency == input$agency) %>%
             group_by(interviewer) %>%
             summarize(unmatch_mcaid = sum(is.na(cmhsp_id)), # cmhsp_id is NA when no match found
                       miss_start = sum(as.numeric(hour(start) %in% c(0, NA))),
                       miss_end = sum(as.numeric(hour(end) %in% c(0, NA))),
+                      miss_reason = sum(is.na(ReasonCompleted)),
                       miss_liv = sum(is.na(LivingSituation)),
+                      miss_setting = sum(is.na(InterviewSetting)),
+                      miss_supports = sum(is.na(sis_sup1_reln_typ_cd)),
+                      miss_respond = sum(is.na(sis_res1_reln_typ_cd)),
                       not_mich = sum(as.numeric(sis_cl_st != "MI")))
         } else
           print(paste0("Error.  Unrecognized input."))
@@ -1304,7 +1325,9 @@
           datatable(rownames = FALSE,
                     colnames = c('Interviewer',
                                  'Unmatched Mcaid IDs','Missing Start Time',
-                                 'Missing End Time','No Living Situation',
+                                 'Missing End Time','Missing Reason',
+                                 'No Living Situation','No Intrvw Setting',
+                                 'Missing Supports Info','Missing Respondents',
                                  'State other than MI'),
                     caption = 'Data Quality Issues, by Interviewer',
                     extensions = c('Responsive','ColVis'),
@@ -1325,8 +1348,28 @@
                       backgroundSize = '100% 90%',
                       backgroundRepeat = 'no-repeat',
                       backgroundPosition = 'center') %>%
+          formatStyle('miss_reason',
+                      background = styleColorBar(mia$miss_reason, 'lightblue'),
+                      backgroundSize = '100% 90%',
+                      backgroundRepeat = 'no-repeat',
+                      backgroundPosition = 'center') %>%
           formatStyle('miss_liv',
                       background = styleColorBar(mia$miss_liv, 'steelblue'),
+                      backgroundSize = '100% 90%',
+                      backgroundRepeat = 'no-repeat',
+                      backgroundPosition = 'center') %>%
+          formatStyle('miss_setting',
+                      background = styleColorBar(mia$miss_setting, 'steelblue'),
+                      backgroundSize = '100% 90%',
+                      backgroundRepeat = 'no-repeat',
+                      backgroundPosition = 'center') %>%
+          formatStyle('miss_supports',
+                      background = styleColorBar(mia$miss_supports, 'steelblue'),
+                      backgroundSize = '100% 90%',
+                      backgroundRepeat = 'no-repeat',
+                      backgroundPosition = 'center') %>%
+          formatStyle('miss_respond',
+                      background = styleColorBar(mia$miss_respond, 'steelblue'),
                       backgroundSize = '100% 90%',
                       backgroundRepeat = 'no-repeat',
                       backgroundPosition = 'center') %>%

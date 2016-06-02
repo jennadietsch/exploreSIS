@@ -1225,7 +1225,7 @@ dashboardPage(
         tabName = "data_quality",
         fluidRow(
           column(
-            width = 6,
+            width = 12,
             box(
               title = "Data Quality Issues", 
               status = "warning",
@@ -1236,27 +1236,72 @@ dashboardPage(
                 width = NULL,
                 tabPanel(
                   "Missing or Incorrect Entries",
+                  radioButtons(
+                    "current",
+                    label = "Display:",
+                    choices = c("Current assessors", "All Assessors"), 
+                    selected = "Current assessors",
+                    inline = T
+                  ),
                   dataTableOutput("dt_datqual")
                 ),
                 tabPanel(
                   "About",
                   p(
-                    em("Unmatched Mcaid IDs"), 
-                    "counts the number of instances in which the Medicaid ID from 
-                    the SIS data does not match with the attribution file.",
-                    br(),
-                    em("Missing Start Time"), "and", em("Missing End Time"),
+                    strong("Unmatched Mcaid IDs"), "counts the number of 
+                    instances in which the Medicaid ID from the SIS data does 
+                    not match with the attribution file."
+                  ),
+                  p(
+                    strong("Missing Start Time"), "and", strong("Missing End Time"),
                     "count the number of times that no start/end time was entered 
                     for the assessment, thereby making it impossible to 
-                    calculate the duration of the assessment.",
-                    br(),
-                    em("No Living Situation"),
+                    calculate the duration of the assessment."
+                  ),
+                  p(
+                    strong("Missing Reason"), 
+                    "counts the number of instances in which no reason was given 
+                    for the completion of the SIS assessment.  Available reasons 
+                    include:", 
+                    em("Change in situation, First SIS, or Regularly scheduled 
+                       assessment")
+                  ),
+                  p(
+                    strong("No Living Situation"),
                     "counts the number of instances in which no living situation 
                     was identified for the individual being assessed, thereby 
                     making it impossible to group people into 
-                    residential/family/independent groups.",
-                    br(),
-                    em("State other than MI"),
+                    residential/family/independent groups."
+                  ),
+                  p(
+                    strong("No Intrvw Setting"),
+                    "counts the number of instances in which the interview 
+                    setting was not specified for the SIS assessment."
+                  ),
+                  p(
+                    strong("Missing Supports Info"),
+                    "counts the number of instances in which information was 
+                    missing from the initial entry field for ", 
+                    em("Supports Relation Type."), " While multiple supports 
+                    can be recorded on the SIS assessment, there is no way of 
+                    knowing the actual number of supports that the individual 
+                    was receiving using the SIS data alone.  This count assumes 
+                    that individuals had at least one support at the time of 
+                    the interview."
+                  ),
+                  p(
+                    strong("Missing Respondents"),
+                    "counts the number of instances in which information was 
+                    missing from the initial entry field for ", 
+                    em("Respondent Relation Type."), " While multiple respondents 
+                    can be recorded on the SIS assessment, there is no way of 
+                    knowing the actual number of respondents that were present 
+                    using the SIS data alone.  This count assumes that 
+                    individuals had at least one respondent present for the 
+                    interview."
+                  ),
+                  p(
+                    strong("State other than MI"),
                     "counts the number of times that a state other than Michigan 
                     was identified as the living address of the person being 
                     assessed.  This is one of a number of issues with data entry 
