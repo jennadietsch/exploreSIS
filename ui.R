@@ -969,12 +969,187 @@ dashboardPage(
         tabName = "planning",
         fluidRow(
           column(
-            width = 6,
+            width = 12,
+            box(
+              title = "Individual Recommendations",
+              status = "warning",
+              collapsible = TRUE, 
+              collapsed = TRUE,
+              width = NULL,
+              uiOutput('id_drop'), # filter reactive based on selected filters
+              tabBox(
+                width = NULL,
+                tabPanel(
+                  "Instructions",
+                  h4("Use in Person-Centered Planning"),
+                  p(
+                    "The needs identified by the Supports Intensity Scale® (SIS) 
+                    are an important aspect of the person-centered planning 
+                    process.  Results from the SIS should be used to inform the 
+                    discussion about what natural supports, medically-necessary 
+                    services, and community resources are needed to support 
+                    an individual."
+                  ),
+                  p(
+                    "Case managers may find it helpful to use the areas of need
+                    identified (see ", em("Area"), " column) to identify 
+                    potential goals for consideration by persons served and 
+                    their planning team.  Within each area, the specific 
+                    needs identified (see ", em("Need")," column) can inform 
+                    specific objectives related to the broader goals.  It may 
+                    be helpful for case managers to review the full SIS report 
+                    for additional details or comments provided by the SIS 
+                    assessor."
+                  ),
+                  p(
+                    "All needs identified in the SIS should be either addressed 
+                    or deferred in the person centered plan. The reason for 
+                    deferral should be stated explicitly in planning 
+                    documentation."
+                  ),
+                  h4("What's Included..."),
+                  p(
+                    "The output here does not represent all items from the SIS 
+                    for every person.  Instead, it intends to highlight areas 
+                    that may be most relevant to person-centered planning.  
+                    While there are ", paste0(nrow(needs)), " needs assessed by 
+                    the SIS, needs are displayed only when they meet 
+                    the following criteria:",
+                    tags$ul(
+                      tags$li("The need has been identified as important by the 
+                              person"),
+                      tags$li("The need has been identified as important by the 
+                              person's family, friends or other supports"),
+                      tags$li("The need falls into a high-risk group which 
+                              should be considered as part of treatment 
+                              planning"),
+                      tags$li("There is a need identified in that area, 
+                              indicated by a score greater than 0")
+                    )  
+                  ),
+                  p(
+                    "While the person may have needs in other areas, this focus 
+                    is intended to promote safety while also identifying 
+                    personal priorities."
+                  ),
+                  h4("Limitations"),
+                  p(
+                    "The IDs for individual profiles which are shown in the 
+                    drop-down do not correspond to individuals and is currently 
+                    intended only as an example of how SIS data might be used in 
+                    the process of developing an IPOS."
+                  ),
+                  p(
+                    "The frequency and daily support time reflect the level of 
+                    support needed for the individual to participate in a given 
+                    activity just as another person of the same age in the 
+                    community. These items do not indicate that services should 
+                    be authorized with a specific scope, amount, or duration."
+                  ),
+                  p(
+                    "The Supports Intensity Scale is not intended to be the sole 
+                    source of information assisting in the development of an 
+                    individualized plan of service."
+                  )
+                ),
+                tabPanel(
+                  "Endorsed by Person",
+                  dataTableOutput("ipos_tofor"),
+                  br(),
+                  p(
+                    "The items displayed above were endorsed by either 
+                    the person (", em("To"), 
+                    "), members of their support system ", em("For"), 
+                    "), or both (", em("To and For"), 
+                    ") as being important in the person's life." 
+                  ),
+                  p(
+                    "These items should be considered a priority during the 
+                    person-centered planning process. Case managers can use 
+                    the information here to:",
+                    tags$ul(
+                      tags$li("prompt the person to consider whether to pursue 
+                              a new goal"),
+                      tags$li("consider potential referrals for additional 
+                              supports"),
+                      tags$li("revisit items already addressed in the person's 
+                              previous plan of service"),
+                      tags$li("note items that will be addressed in future 
+                              planning")
+                    )
+                  ),
+                  p(
+                    "The numeric scores (", em("shaded by intensity of need"),
+                    ") shown in the table are comprised of scores for the 
+                    intensity of ",
+                    em("Type"),", ", em("Frequency"), ", and ", 
+                    em("Daily Support Time"), "related to the need."
+                  ),
+                  p(
+                    "Items which were endorsed as important but which did not 
+                    have any need indicated during the assessment (", 
+                    em("i.e. where the score was zero"),
+                    ") are not included in the list above."
+                  ),
+                  p(
+                    "Items from the ", em("Behavioral Supports"), " and ", 
+                    em("Medical Supports"), " sections do not have the option 
+                    of being endorsed as important by the person or their 
+                    support network.  These items are included in the ", 
+                    em("Additional Needs"), " tab."
+                  )
+                ),
+                tabPanel(
+                  "Additional Needs",
+                  p(
+                    "In addition to the needs endorsed by the person or their 
+                    supports, there are a number of basic needs that the plan 
+                    of service should also address (",
+                    em("eating, for example"),").  These are listed below:"
+                  ),
+                  dataTableOutput("ipos_need"),
+                  br(),
+                  p(
+                    "The ", em("Behavioral Supports"), " and ", 
+                    em("Medical Supports"), " areas use a different scale (0-2) 
+                    than the items in the other sections of the SIS.  Items with 
+                    scores of 1 or 2 are highlighted for emphasis."
+                  ),
+                  p(
+                    "Needs in any of the following areas are included here: ",
+                    em(paste(needs$item_desc[needs$need_svc == T],sep = '',collapse = ', '))
+                  ),
+                  p(
+                    "Needs from the areas listed above which were endorsed by 
+                    the person or their supports are also included in the ",
+                    em("Endorsed by Person"), " tab and are repeated here."
+                  )
+                ),
+                tabPanel(
+                  "CLS Guidance",
+                  h4("Coming soon")
+                ),
+                tabPanel(
+                  "Potential Referrals",
+                  p(
+                    "Based on the needs identified in the SIS assessment, 
+                    the individual may benefit from additional assessment 
+                    in the area(s) indicated below to determine if any 
+                    ongoing ancillary services are medically necessary or 
+                    if any changes to existing care plans are needed."
+                  ),
+                  dataTableOutput("ipos_refer")
+                )
+              )
+            )
+          ),
+          column(
+            width = 12,
             box(
               title = "Items for Focus", 
               status = "warning",
               collapsible = TRUE, 
-              collapsed = FALSE,
+              collapsed = TRUE,
               width = NULL,
               tabBox(
                 width = NULL,
@@ -1066,12 +1241,12 @@ dashboardPage(
             )
           ),
           column(
-            width = 6,
+            width = 12,
             box(
               title = "Population Needs", 
               status = "warning",
               collapsible = TRUE, 
-              collapsed = FALSE,
+              collapsed = TRUE,
               width = NULL,
               tabBox(
                 width = NULL,

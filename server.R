@@ -63,7 +63,7 @@
         
         tos_section1 <-
           s1 %>%
-          group_by(agency, item, type, frequency, DST) %>%
+          group_by(agency, item_desc, type, frequency, DST) %>%
           summarize(n = n(),
                     type_tot = sum(type_n),
                     frequency_tot = sum(frequency_n),
@@ -92,7 +92,7 @@
         
         tos_section2 <-
           sec2Input() %>%
-          group_by(agency, item, type, frequency, DST) %>%
+          group_by(agency, item_desc, type, frequency, DST) %>%
           summarize(n = n(),
                     type_tot = sum(type_n),
                     frequency_tot = sum(frequency_n),
@@ -104,65 +104,73 @@
       sec3Input <- reactive({
         
         sisInput() %>%
-          select(fake_id, agency, LivingType, starts_with("s3")) %>%
-          select(fake_id, agency, LivingType, ends_with("support")) %>%
+          select(fake_id, agency, sis_date, LivingType, starts_with("s3")) %>%
+          select(fake_id, agency, sis_date, LivingType, ends_with("support")) %>%
           gather(item,score,s3a_1_support:s3b_13_support) %>%
-          mutate(subtype = car::recode(item,
-                                       "c('s3a_1_support','s3a_2_support','s3a_3_support',
-                                       's3a_4_support') = 'Respiratory Care';
-                                       c('s3a_5_support','s3a_6_support',
-                                       's3a_7_support') = 'Feeding Assistance';
-                                       c('s3a_8_support','s3a_9_support') = 'Skin Care';
-                                       c('s3a_10_support','s3a_11_support','s3a_12_support',
-                                       's3a_13_support','s3a_14_support','s3a_15_support',
-                                       's3a_16_support') = 'Other Medical';
-                                       c('s3b_1_support','s3b_2_support','s3b_3_support') 
-                                       = 'External Destructiveness';
-                                       c('s3b_4_support','s3b_5_support','s3b_6_support') 
-                                       = 'Self Destructiveness';
-                                       c('s3b_7_support','s3b_8_support') = 'Sexual';
-                                       c('s3b_9_support','s3b_10_support',
-                                       's3b_11_support','s3b_12_support',
-                                       's3b_13_support') = 'Other Behavioral'"),
-                 type = car::recode(subtype,
-                                    "c('Respiratory Care','Feeding Assistance',
-                                    'Skin Care','Other Medical') = 'Medical';
-                                    c('External Destructiveness','Self Destructiveness',
-                                    'Sexual','Other Behavioral') = 'Behavioral'"),
-                 name = car::recode(item,
-                                    "'s3a_1_support' = 'Oxygen therapy';
-                                    's3a_2_support' = 'Postural drainage';
-                                    's3a_3_support' = 'Chest PT';
-                                    's3a_4_support' = 'Suctioning';
-                                    's3a_5_support' = 'Oral stimulation';
-                                    's3a_6_support' = 'Tube feeding';
-                                    's3a_7_support' = 'Parental feeding';
-                                    's3a_8_support' = 'Positioning';
-                                    's3a_9_support' = 'Dressing wounds';
-                                    's3a_10_support' = 'Prevent infection';
-                                    's3a_11_support' = 'Seizure mgmt';
-                                    's3a_12_support' = 'Dialysis';
-                                    's3a_13_support' = 'Ostomy care';
-                                    's3a_14_support' = 'Transfers';
-                                    's3a_15_support' = 'Therapy svs';
-                                    's3a_16_support' = 'Other medical';
-                                    's3b_1_support' = 'Assault';
-                                    's3b_2_support' = 'Property destruction';
-                                    's3b_3_support' = 'Stealing';
-                                    's3b_4_support' = 'Self injury';
-                                    's3b_5_support' = 'Pica';
-                                    's3b_6_support' = 'Suicide attempts';
-                                    's3b_7_support'  = 'Sexual aggression';
-                                    's3b_8_support' = 'Inappropriate';
-                                    's3b_9_support' = 'Outbursts';
-                                    's3b_10_support' = 'Wandering';
-                                    's3b_11_support' = 'Substance abuse';
-                                    's3b_12_support' = 'Mental health tx';
-                                    's3b_13_support' = 'Other behavioral'"),
+          mutate(item = gsub("support", "", item),
                  level = car::recode(score,
                                      "0 = 'No Support Needed';
-                                     1 = 'Some Support Needed';
-                                     2 = 'Extensive Support Needed'")) 
+                                      1 = 'Some Support Needed';
+                                      2 = 'Extensive Support Needed'")) %>%
+          left_join(needs, by = "item") %>%
+          select(fake_id,agency,sis_date,LivingType,
+                 section,section_desc,item,item_desc,
+                 need_svc,score,
+                 refer_ot,refer_nurs,refer_sp,refer_pt,refer_diet,
+                 level)
+        
+      })
+      
+      s1_3Input <- reactive({
+        
+        s1_filt <-
+          sec1Input() %>%
+          select(fake_id,agency,sis_date,
+                 section,section_desc,item,item_desc,
+                 need_svc,score,
+                 refer_ot,refer_nurs,refer_sp,refer_pt,refer_diet,
+                 type,type_n,frequency,frequency_n,DST,DST_n,       
+                 import_to,import_for,importance) %>%
+          mutate(level = NA) %>%
+          select(fake_id:score,level,type:importance,refer_ot:refer_diet)
+        
+        s2_filt <-
+          sec2Input() %>%
+          select(fake_id,agency,sis_date,
+                 section,section_desc,item,item_desc,
+                 need_svc,score,
+                 refer_ot,refer_nurs,refer_sp,refer_pt,refer_diet,
+                 type,type_n,frequency,frequency_n,DST,DST_n,       
+                 import_to,import_for,importance) %>%
+          mutate(level = NA) %>%
+          select(fake_id:score,level,type:importance,refer_ot:refer_diet)
+        
+        s3_filt <-
+          sec3Input() %>%
+          select(fake_id,agency,sis_date,
+                 section,section_desc,item,item_desc,
+                 need_svc,score,
+                 refer_ot,refer_nurs,refer_sp,refer_pt,refer_diet,
+                 level) %>%
+          mutate(type = NA,
+                 type_n = NA,
+                 frequency = NA,
+                 frequency_n = NA,
+                 DST = NA,
+                 DST_n = NA,       
+                 import_to = NA,
+                 import_for = NA,
+                 importance = NA) %>%
+          select(fake_id:score,level,type:importance,refer_ot:refer_diet)
+        
+        s1_3Input <- rbind(s1_filt, s2_filt, s3_filt)
+        
+        rm(s1_filt); rm(s2_filt); rm(s3_filt)
+        
+        s1_3Input %>%
+          mutate(type = ifelse(section %in% c("s3a","s3b"),
+                               yes = level, no = type)) %>%
+          select(-level)
         
       })
       
@@ -277,7 +285,7 @@
         tos1 <- tos1Input()
         selectInput("s1domain",
                     label = "Select a life domain:",
-                    choices = levels(unique(as.factor(tos1$item))), 
+                    choices = levels(unique(as.factor(tos1$item_desc))), 
                     selected = "")
       })
       
@@ -285,7 +293,7 @@
         tos2 <- tos2Input()
         selectInput("s2domain",
                     label = "Select a life domain:",
-                    choices = levels(unique(as.factor(tos2$item))), 
+                    choices = levels(unique(as.factor(tos2$item_desc))), 
                     selected = "")
       })
       
@@ -309,6 +317,14 @@
           selected = "All"
         )
         
+      })
+      
+      output$id_drop <- renderUI({
+        sisInput <- sisInput()
+        selectInput("id_drop",
+                    label = "Select an individual:",
+                    choices = levels(unique(as.factor(sisInput$fake_id)))
+                    )
       })
       
       ## VISUALIZATIONS ##
@@ -671,12 +687,12 @@
                                        & type == "None", 
                                        yes = TRUE, no = FALSE)) %>%
             filter(no_concern == F) %>%
-            group_by(item,type ) %>% # type importance
+            group_by(item_desc,type ) %>% # type importance
             summarize(n = n_distinct(fake_id),
                       avg = round(mean(score, na.rm = T), digits = 1)) %>%
             ungroup() %>% droplevels() %>%
             arrange(desc(n)) %>%
-            plot_ly(x = item, y = n, type = "bar", color = type, 
+            plot_ly(x = item_desc, y = n, type = "bar", color = type, 
                     colors = c("#FF0000", "#00A08A", "#F2AD00", 
                                "#F98400", "#5BBCD6")) %>%
             layout(xaxis = list(title = "Life Domain", showticklabels = F),
@@ -690,12 +706,12 @@
                                        & type == "None", 
                                        yes = TRUE, no = FALSE)) %>%
             filter(no_concern == F) %>%
-            group_by(item) %>% # type importance
+            group_by(item_desc) %>% # type importance
             summarize(n = n_distinct(fake_id),
                       avg = round(mean(score, na.rm = T), digits = 1)) %>%
             ungroup() %>% droplevels() %>%
             arrange(desc(avg)) %>%
-            plot_ly(x = item, y = avg, type = "bar",  
+            plot_ly(x = item_desc, y = avg, type = "bar",  
                     colors = c("#FF0000", "#00A08A", "#F2AD00", 
                                "#F98400", "#5BBCD6")) %>%
             layout(xaxis = list(title = "Life Domain", showticklabels = F),
@@ -718,13 +734,13 @@
           print(paste0("Error.  Unrecognized input."))
         
         filt_inpt %>%
-          group_by(item) %>%
+          group_by(item_desc) %>%
           summarize(To = sum(as.numeric(import_to), na.rm = T),
                     For = sum(as.numeric(import_for), na.rm = T)) %>%
           gather(important, n, To:For) %>%
           ungroup() %>%
           arrange(desc(n)) %>%
-          plot_ly(x = item, y = n, type = "bar", color = important, 
+          plot_ly(x = item_desc, y = n, type = "bar", color = important, 
                   colors = c('#b2df8a', '#1f78b4')) %>%
           layout(xaxis = list(title = "Life Domain", showticklabels = F),
                  yaxis = list(title = "People with need marked as important"),
@@ -739,8 +755,8 @@
         if ( input$agency == "All" ) {
           tos_parset <- 
             tos1Input() %>% 
-            filter(item == input$s1domain) %>%
-            select(-item) %>%
+            filter(item_desc == input$s1domain) %>%
+            select(-item_desc) %>%
             group_by(type,frequency,DST,agency) %>%
             summarize(n = sum(n))
           
@@ -758,7 +774,7 @@
           tos_parset <- 
             tos1Input() %>% 
             filter(agency == input$agency 
-                   & item == input$s1domain) %>%
+                   & item_desc == input$s1domain) %>%
             group_by(type,frequency,DST) %>%
             summarize(n = sum(n))
           
@@ -781,8 +797,8 @@
         if ( input$agency == "All" ) {
           tos_parset <- 
             tos2Input() %>% 
-            filter(item == input$s2domain) %>%
-            select(-item) %>%
+            filter(item_desc == input$s2domain) %>%
+            select(-item_desc) %>%
             group_by(type,frequency,DST,agency) %>%
             summarize(n = sum(n))
           
@@ -800,7 +816,7 @@
           tos_parset <- 
             tos2Input() %>% 
             filter(agency == input$agency 
-                   & item == input$s2domain) %>%
+                   & item_desc == input$s2domain) %>%
             group_by(type,frequency,DST) %>%
             summarize(n = sum(n))
           
@@ -825,22 +841,22 @@
           
           df <-
             sec1Input() %>%
-            group_by(agency, item) %>%
+            group_by(agency, item_desc) %>%
             summarize(avg = round(mean(score), digits = 1)) %>%
             spread(agency, avg)
           
           dt_in <-
             sec1Input() %>%
-            group_by(item) %>%
+            group_by(item_desc) %>%
             summarize(avg = round(mean(score), digits = 1)) %>% 
-            left_join(df, id = "item") %>%
-            rename(All = avg)
+            left_join(df, id = "item_desc") %>%
+            rename(All = avg, Item = item_desc)
           
         } else if ( input$agency %in% levels(unique(scrub_sis$agency)) ) {
           
           df <-
             sec1Input() %>%
-            group_by(agency, item) %>%
+            group_by(agency, item_desc) %>%
             summarize(avg = round(mean(score), digits = 1)) %>%
             filter(agency == input$agency) %>%
             spread(agency, avg)
@@ -848,10 +864,10 @@
           dt_in <-
             sec1Input() %>%
             filter(agency != input$agency) %>%
-            group_by(item) %>%
+            group_by(item_desc) %>%
             summarize(avg = round(mean(score), digits = 1)) %>% 
-            left_join(df, id = "item") %>%
-            rename(All.Others = avg)
+            left_join(df, id = "item_desc") %>%
+            rename(All.Others = avg, Item = item_desc)
           
         } else
           print(paste0("Error.  Unrecognized input."))
@@ -861,7 +877,7 @@
                     rownames = FALSE,
                     extensions = c('Responsive','ColVis'),
                     options = list(pageLength = 5,
-                                   lengthMenu = c(5, 10, nlevels(as.factor(dt_in$item))),
+                                   lengthMenu = c(5, 10, nlevels(as.factor(dt_in$Item))),
                                    dom = 'C<"clear">lfrtip')) 
       })
        
@@ -871,22 +887,22 @@
           
           df <-
             sec2Input() %>%
-            group_by(agency, item) %>%
+            group_by(agency, item_desc) %>%
             summarize(avg = round(mean(score), digits = 1)) %>%
             spread(agency, avg)
           
           dt_in <-
             sec2Input() %>%
-            group_by(item) %>%
+            group_by(item_desc) %>%
             summarize(avg = round(mean(score), digits = 1)) %>% 
-            left_join(df, id = "item") %>%
-            rename(All = avg)
+            left_join(df, id = "item_desc") %>%
+            rename(All = avg, Item = item_desc)
           
         } else if ( input$agency %in% levels(unique(scrub_sis$agency)) ) {
           
           df <-
             sec2Input() %>%
-            group_by(agency, item) %>%
+            group_by(agency, item_desc) %>%
             summarize(avg = round(mean(score), digits = 1)) %>%
             filter(agency == input$agency) %>%
             spread(agency, avg)
@@ -894,10 +910,10 @@
           dt_in <-
             sec2Input() %>%
             filter(agency != input$agency) %>%
-            group_by(item) %>%
+            group_by(item_desc) %>%
             summarize(avg = round(mean(score), digits = 1)) %>% 
-            left_join(df, id = "item") %>%
-            rename(All.Others = avg)
+            left_join(df, id = "item_desc") %>%
+            rename(All.Others = avg, Item = item_desc)
           
         } else
           print(paste0("Error.  Unrecognized input."))
@@ -907,7 +923,7 @@
           datatable(caption = 'Average Raw Scores on Section 2 Items, by CMH',
                     rownames = FALSE,
                     extensions = c('Responsive','ColVis'),
-                    options = list(pageLength = nlevels(as.factor(dt_in$item)), 
+                    options = list(pageLength = nlevels(as.factor(dt_in$Item)), 
                                    dom = 'C<"clear">lfrtip')) 
       })
       
@@ -1089,18 +1105,18 @@
       
       output$conditions <- renderPlotly({
         
-        radio <- if (input$radio_mb == "Both") {c("Medical","Behavioral")
-        } else if (input$radio_mb == "Medical") {c("Medical")
-        } else if (input$radio_mb == "Behavioral") {c("Behavioral")
+        radio <- if (input$radio_mb == "Both") {c("Medical Supports","Behavioral Supports")
+        } else if (input$radio_mb == "Medical") {c("Medical Supports")
+        } else if (input$radio_mb == "Behavioral") {c("Behavioral Supports")
         } else print(paste0("Error.  Unrecognized input."))
         
         if ( input$agency == "All" ) {
           conditions <-
             sec3Input() %>%
             filter(score > 0
-                   & type %in% radio
+                   & section_desc %in% radio
                    & LivingType %in% input$living) %>%
-            group_by(name,level) %>%
+            group_by(item_desc,level) %>%
             summarize(n = n()) %>%
             ungroup() %>%
             arrange(desc(n))
@@ -1109,9 +1125,9 @@
             sec3Input() %>%
             filter(agency == input$agency
                    & score > 0
-                   & type %in% radio
+                   & section_desc %in% radio
                    & LivingType %in% input$living) %>%
-            group_by(name,level) %>%
+            group_by(item_desc,level) %>%
             summarize(n = n()) %>%
             ungroup() %>%
             arrange(desc(n))
@@ -1119,7 +1135,7 @@
           print(paste0("Error.  Unrecognized input."))
         
         conditions %>%
-          plot_ly(x = name, y = n, type = "bar", color = level, 
+          plot_ly(x = item_desc, y = n, type = "bar", color = level, 
                   colors = c("#F98400","#FF0000")) %>%
           layout(xaxis = list(title = "Type of Need", showticklabels = F),
                  yaxis = list(title = "People with need"),
@@ -1213,6 +1229,127 @@
                                       showticklabels = F))
           
       })
+      
+      output$ipos_tofor <- renderDataTable({
+        
+        withProgress(message = 'Checking...',
+                     detail = 'personal preferences',
+                     value = 0.1, 
+                     {
+                       
+                       DT_in <-
+                         s1_3Input() %>% 
+                         group_by(fake_id) %>%
+                         filter(fake_id == input$id_drop
+                                & as.Date(sis_date) == max(as.Date(sis_date))) %>%
+                         filter(import_to == T | import_for == T) %>%
+                         filter(score > 0) %>%
+                         arrange(section_desc,desc(score)) %>%
+                         ungroup() %>%
+                         select(section_desc,item_desc,score,
+                                type,frequency,DST,importance) 
+                       
+                       DT_in %>%
+                         datatable(
+                           rownames = F,
+                           colnames = c('Area','Need','Score',
+                                        'Type of Support','Frequency','Daily Support Time',
+                                        'Important To/For'),
+                           options = list(pageLength = nrow(DT_in),
+                                          dom = 't')
+                         ) %>%
+                         formatStyle(
+                           'score',
+                           color = styleInterval(c(6), c("#800026","#ffffcc")),
+                           backgroundColor = styleInterval(c(1:8), brewer.pal(9,"YlOrRd")) 
+                         )
+                       
+                     })
+        
+      })
+      
+      output$ipos_need <- renderDataTable({
+        
+        withProgress(message = 'Identifying...',
+                     detail = 'personal needs',
+                     value = 0.1, 
+                     {
+                       DT_in <-
+                         s1_3Input() %>% 
+                         group_by(fake_id) %>%
+                         filter(fake_id == input$id_drop
+                                & as.Date(sis_date) == max(as.Date(sis_date))) %>%
+                         filter(need_svc == T) %>% # 
+                         filter(score > 0) %>%
+                         arrange(section_desc,desc(score)) %>%
+                         ungroup() %>%
+                         select(section_desc,item_desc,score,
+                                type,frequency,DST) 
+                       
+                       
+                       DT_in %>%
+                         datatable(
+                           rownames = F,
+                           colnames = c('Area','Need','Score',
+                                        'Type of Support','Frequency','Daily Support Time'),
+                           options = list(pageLength = nrow(DT_in),
+                                          dom = 't')
+                         ) %>%
+                         formatStyle(
+                           'score',
+                           color = styleInterval(c(6), c("#800026","#ffffcc")),
+                           backgroundColor = styleInterval(c(1:8), brewer.pal(9,"YlOrRd"))
+                         ) %>%
+                         formatStyle(
+                           'type', 
+                           color = styleEqual(c("Some Support Needed","Extensive Support Needed"), 
+                                              c("#800026", "#fc4e2a")),
+                           fontWeight = styleEqual(c("Some Support Needed","Extensive Support Needed"), 
+                                                   c('bold', 'bold'))
+                         )
+                     })
+        
+
+      })
+      
+      output$ipos_refer <- renderDataTable({
+        
+        withProgress(message = 'Thinking...',
+                     detail = 'of potential referrals',
+                     value = 0.1, 
+                     {DT_in <-
+                       s1_3Input() %>% 
+                       group_by(fake_id) %>%
+                       filter(fake_id == input$id_drop
+                              & as.Date(sis_date) == max(as.Date(sis_date))) %>%
+                       filter(need_svc == T | import_to == T | import_for == T) %>% 
+                       filter(refer_ot == T | refer_nurs== T | refer_sp == T | refer_pt == T | refer_diet) %>%
+                       filter(score > 0) %>%
+                       ungroup() %>%
+                       gather(refer_to,YorN,refer_ot:refer_diet) %>%
+                       filter(YorN == T) %>%
+                       mutate(refer_to = recode(refer_to,
+                                                "'refer_ot' = 'Occupational Therapy';
+                                                'refer_nurs' = 'Nursing';
+                                                'refer_sp' = 'Speech Pathology';
+                                                'refer_pt' = 'Physical Therapy';
+                                                'refer_diet' = 'Dietician'")) %>%
+                       select(item_desc,refer_to,YorN) %>%
+                       group_by(refer_to) %>%
+                       summarize(needs = n()) %>%
+                       ungroup() %>%
+                       arrange(desc(needs))
+                     
+                     DT_in %>%
+                         datatable(
+                           rownames = F,
+                           colnames = c("Consider referral to:","Needs noted in SIS"),
+                           options = list(pageLength = nrow(DT_in),
+                                          dom = 't')
+                         )
+                     })
+        
+      })  
       
       output$need_heat <- renderD3heatmap({
         
@@ -1384,3 +1521,4 @@
       
     }
   )
+      
