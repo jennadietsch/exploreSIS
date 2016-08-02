@@ -958,16 +958,22 @@
         
         ifelse(
           input$central == "Mean",
-          yes = hist <- hist %>% add_trace(x = mean(SupportNeedsIndex), 
+          yes = hist <- hist %>% add_trace(x = rep(mean(SupportNeedsIndex), 
+                                                   each = 100), 
                                            y = mean(SupportNeedsIndex),
+                                           type = "line",
+                                           line = list(dash = 5),
+                                           marker = list(color = "#555555"),
                                            name = "Mean score",
-                                           showlegend = F,
-                                           mode = "line"),
-          no  = hist <- hist %>% add_trace(x = median(SupportNeedsIndex), 
+                                           yaxis = "y"),
+          no  = hist <- hist %>% add_trace(x = rep(mean(SupportNeedsIndex), 
+                                                   each = 100), 
                                            y = median(SupportNeedsIndex),
+                                           type = "line",
+                                           line = list(dash = 5),
+                                           marker = list(color = "#555555"),
                                            name = "Median score",
-                                           showlegend = F,
-                                           mode = "line")
+                                           yaxis = "y")
         )
         
         hist
