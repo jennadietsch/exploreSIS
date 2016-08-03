@@ -12,6 +12,7 @@
   library(dplyr)
   library(magrittr)
   library(tidyr)
+  library(googlesheets)
   library(plotly)
   library(xts)
   library(lubridate)
