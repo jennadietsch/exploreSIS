@@ -473,6 +473,11 @@ dashboardPage(
               status = "warning",
               collapsible = TRUE, 
               width = NULL,
+              selectInput(
+                "select_area_s1",
+                label = "Select life area:",
+                choices = c("All", levels(as.factor(s1$section_desc)))
+              ),
               tabBox(
                 width = NULL,
                 tabPanel(
@@ -488,6 +493,30 @@ dashboardPage(
                   "About",
                   tabBox(
                     width = NULL,
+                    tabPanel(
+                      "The Table",
+                      p(
+                        "The table shows the average (", em("All"), 
+                        ") and standard deviation (", em("StDev"),
+                        ") of raw scores for each item from the selected 
+                        section of the SIS.  The standard deviation can be used 
+                        to look at items whose total score has the greatest 
+                        amount of variation across assessments.  You can then 
+                        explore potential causes of variation using the 
+                        visualization in the ", em("Chart"), " tab and selecting 
+                        the item you want to investigate."
+                      ),
+                      p(
+                        "When a specific agency is selected, the table will 
+                        display the average (", em("All.Others"),
+                        ") of scores for all agencies other than the one 
+                        selected and the difference between the selected 
+                        agency's average score and the average of other 
+                        agencies (", em("Difference"), ") in order allow easy 
+                        identification of areas where a given agency's scores 
+                        are higher or lower than their peers."
+                      )
+                    ),
                     tabPanel(
                       "The Chart", 
                       br(),
@@ -612,6 +641,30 @@ dashboardPage(
                   "About",
                   tabBox(
                     width = NULL,
+                    tabPanel(
+                      "The Table",
+                      p(
+                        "The table shows the average (", em("All"), 
+                        ") and standard deviation (", em("StDev"),
+                        ") of raw scores for each item from the selected 
+                        section of the SIS.  The standard deviation can be used 
+                        to look at items whose total score has the greatest 
+                        amount of variation across assessments.  You can then 
+                        explore potential causes of variation using the 
+                        visualization in the ", em("Chart"), " tab and selecting 
+                        the item you want to investigate."
+                      ),
+                      p(
+                        "When a specific agency is selected, the table will 
+                        display the average (", em("All.Others"),
+                        ") of scores for all agencies other than the one 
+                        selected and the difference between the selected 
+                        agency's average score and the average of other 
+                        agencies (", em("Difference"), ") in order allow easy 
+                        identification of areas where a given agency's scores 
+                        are higher or lower than their peers."
+                        )
+                      ),
                     tabPanel(
                       "The Chart", 
                       br(),

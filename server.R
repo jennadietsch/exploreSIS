@@ -26,7 +26,7 @@
           per_wk <- 
             scrub_sis %>%
             # Filter out expired assessments (> 3 yrs old)
-            filter(most_recent - as.Date(sis_date) <= (365 * 3)) %>%
+            filter(due - as.Date(sis_date) <= (365 * 3)) %>%
             # Note we still use unfiltered dataset here to calc cum sum over wks
             # without the date filter applied
             filter(as.POSIXct(sis_date) >= as.POSIXct("2011-12-12")
@@ -43,7 +43,7 @@
           per_wk <- 
             scrub_sis %>%
             # Filter out expired assessments (> 3 yrs old)
-            filter(most_recent - as.Date(sis_date) <= (365 * 3)) %>%
+            filter(due - as.Date(sis_date) <= (365 * 3)) %>%
             filter(as.POSIXct(sis_date) >= as.POSIXct("2011-12-12")
                    & as.Date(sis_date) <= Sys.Date()
                    & agency == input$agency
@@ -63,7 +63,7 @@
         
         tos_section1 <-
           s1 %>%
-          group_by(agency, item_desc, type, frequency, DST) %>%
+          group_by(agency, section_desc, item_desc, type, frequency, DST) %>%
           summarize(n = n(),
                     type_tot = sum(type_n),
                     frequency_tot = sum(frequency_n),
@@ -262,7 +262,7 @@
         per_wk <- per_wk()
         
         avg_per_wk <- round(mean(per_wk$n[as.POSIXct(per_wk$week) >= as.POSIXct(most_recent - 90)], 
-                                 na.rm = T), 
+                                   na.rm = T), 
                             digits = 0)
 
         recent_int <- length(unique(scrub_sis$interviewer[as.POSIXct(scrub_sis$sis_date) >= as.POSIXct(most_recent - 90)]))
@@ -273,7 +273,7 @@
           inputId = "what_prod",
           "...each interviewer completed fewer/more assessments per week?",
           min = round(avg_person_wk * 0.5, digits = 0),
-          max = round(avg_person_wk * 1.5, digits = 0),
+          max = round(avg_person_wk * 2, digits = 0),
           value = avg_person_wk,
           step = 1,
           round = T
@@ -283,16 +283,22 @@
       
       output$s1domain <- renderUI({
         tos1 <- tos1Input()
+        
+        filtre <- if (input$select_area_s1 == "All") {
+          levels(as.factor(tos1$item_desc))
+        } else 
+          levels(droplevels(as.factor(tos1$item_desc[tos1$section_desc == input$select_area_s1])))
+        
         selectInput("s1domain",
-                    label = "Select a life domain:",
-                    choices = levels(unique(as.factor(tos1$item_desc))), 
+                    label = "Select a specific need:",
+                    choices = filtre, 
                     selected = "")
       })
       
       output$s2domain <- renderUI({
         tos2 <- tos2Input()
         selectInput("s2domain",
-                    label = "Select a life domain:",
+                    label = "Select a specific need:",
                     choices = levels(unique(as.factor(tos2$item_desc))), 
                     selected = "")
       })
@@ -339,7 +345,10 @@
         
         # Filter out expired assessments (> 3 yrs old)
         
-        sisIn <- recentInput()
+        sisIn <- 
+        recentInput() %>% 
+          filter(as.Date(due) - as.Date(sis_date) <= (365 * 3)) %>%
+          droplevels()
         
         # Proportion of clients interviewed in selected time period 
         # to total current clients meeting criteria
@@ -379,7 +388,13 @@
         # Filter out expired assessments (> 3 yrs old)
         most_recent <- max(as.Date(scrub_sis$sis_date)[as.Date(scrub_sis$sis_date) <= Sys.Date()]) 
         
-        sisIn <- sisInput() %>% filter(most_recent - as.Date(sis_date) <= (365 * 3))
+        # Filter assessments where the date of assessment is >= 3 yrs
+        # before most recent data
+        # sisIn <- sisInput() %>% filter(most_recent - as.Date(sis_date) <= (365 * 3))
+        sisIn <- 
+        sisInput() %>% 
+          filter(as.Date(due) - as.Date(sis_date) <= (365 * 3)) %>%
+          droplevels()
         
         if ( input$agency == "All" ) {
           pct <- 
@@ -404,10 +419,9 @@
       
       output$needperwk <- renderValueBox({
         
-        # Filter out expired assessments (> 3 yrs old)
-        most_recent <- max(as.Date(scrub_sis$sis_date)[as.Date(scrub_sis$sis_date) <= Sys.Date()]) 
-        
-        sisIn <- sisInput() %>% filter(most_recent - as.Date(sis_date) <= (365 * 3))
+        # Filter out expired assessments (> 3 yrs prior to due date)
+
+        sisIn <- sisInput() %>% filter(as.Date(due) - as.Date(sis_date) <= (365 * 3))
         
         if ( input$agency == "All" ) {
           per_wk <- 
@@ -418,6 +432,10 @@
             mutate(avg = NA,
                    need = NA) %>%
             ungroup()
+          
+          already <- nlevels(as.factor(scrub_sis$fake_id[as.Date(scrub_sis$sis_date) < input$dateRange[1]]))
+          
+          
         } else if ( input$agency %in% levels(unique(scrub_sis$agency)) ) {
           per_wk <- 
             sisIn %>%
@@ -428,6 +446,11 @@
             mutate(avg = NA,
                    need = NA) %>%
             ungroup()
+          
+          already <- nlevels(as.factor(scrub_sis$fake_id[scrub_sis$agency == input$agency
+                                                         & as.Date(scrub_sis$sis_date) < input$dateRange[1]]))
+          
+          
         } else
           print(paste0("Error.  Unrecognized input."))
         
@@ -435,8 +458,6 @@
         
         week <- seq(from = input$dateRange[1], to = due, by = "week")
         
-        already <- nlevels(as.factor(scrub_sis$fake_id[scrub_sis$agency == input$agency
-                                                       & as.Date(scrub_sis$sis_date) < input$dateRange[1]]))
         
         needed <- ceiling((totals$total[totals$agency == input$agency] 
                            - already) / length(week))
@@ -460,7 +481,7 @@
             scrub_sis %>% 
             filter(current_int == T) %>% 
             droplevels() %>%
-            group_by(interviewer, agency) %>%
+            group_by(interviewer) %>%
             summarize(n = n(),
                       avg_dur = round(mean(duration, na.rm = T), digits = 0),
                       first = min(as.POSIXct(sis_date))
@@ -470,7 +491,7 @@
             scrub_sis %>% 
             filter(current_int == T, agency == input$agency) %>% 
             droplevels() %>%
-            group_by(interviewer, agency) %>%
+            group_by(interviewer) %>%
             summarize(n = n(),
                       avg_dur = round(mean(duration, na.rm = T), digits = 0),
                       first = min(as.POSIXct(sis_date))
@@ -482,7 +503,7 @@
         num %>%
           datatable(caption = 'SIS assessment summary by Interviewer.',
                     rownames = FALSE,
-                    colnames = c('Interviewer','Agency',
+                    colnames = c('Interviewer',
                                  '# Assessments','Avg minutes',
                                  'Interviewing since'),
                     extensions = c('Responsive','ColVis'),
@@ -756,7 +777,7 @@
           tos_parset <- 
             tos1Input() %>% 
             filter(item_desc == input$s1domain) %>%
-            select(-item_desc) %>%
+            select(-item_desc,-section_desc) %>%
             group_by(type,frequency,DST,agency) %>%
             summarize(n = sum(n))
           
@@ -837,25 +858,36 @@
 
       output$s1_dt <- renderDataTable({
         
+        filtre <- if (input$select_area_s1 == "All") {
+          levels(as.factor(sec1Input()$item_desc))
+        } else 
+          levels(droplevels(as.factor(sec1Input()$item_desc[sec1Input()$section_desc == input$select_area_s1])))
+        
+        
         if ( input$agency == "All" ) {
           
           df <-
             sec1Input() %>%
+            filter(item_desc %in% filtre) %>%
             group_by(agency, item_desc) %>%
             summarize(avg = round(mean(score), digits = 1)) %>%
             spread(agency, avg)
           
           dt_in <-
             sec1Input() %>%
+            filter(item_desc %in% filtre) %>%
             group_by(item_desc) %>%
-            summarize(avg = round(mean(score), digits = 1)) %>% 
+            summarize(avg = round(mean(score), digits = 1),
+                      sd = round(sd(score), digits = 1)) %>% 
             left_join(df, id = "item_desc") %>%
-            rename(All = avg, Item = item_desc)
+            rename(All = avg, StDev = sd, Item = item_desc) %>%
+            arrange(desc(StDev))
           
         } else if ( input$agency %in% levels(unique(scrub_sis$agency)) ) {
           
           df <-
             sec1Input() %>%
+            filter(item_desc %in% filtre) %>%
             group_by(agency, item_desc) %>%
             summarize(avg = round(mean(score), digits = 1)) %>%
             filter(agency == input$agency) %>%
@@ -863,22 +895,49 @@
           
           dt_in <-
             sec1Input() %>%
+            filter(item_desc %in% filtre) %>%
             filter(agency != input$agency) %>%
             group_by(item_desc) %>%
             summarize(avg = round(mean(score), digits = 1)) %>% 
             left_join(df, id = "item_desc") %>%
-            rename(All.Others = avg, Item = item_desc)
+            mutate(differ = .[[3]] - .[[2]]) %>% # use col indices since names change
+            rename(All.Others = avg, Difference = differ, Item = item_desc) %>%
+            arrange(desc(Difference))
           
         } else
           print(paste0("Error.  Unrecognized input."))
         
+        dt <-
         dt_in %>%
-          datatable(caption = 'Average Raw Scores on Section 1 Items, by CMH',
+          datatable(caption = paste0("Variation and Average Raw Scores on Section 1 Items (",
+                                     input$select_area_s1, "), by CMH"),
                     rownames = FALSE,
                     extensions = c('Responsive','ColVis'),
                     options = list(pageLength = 5,
-                                   lengthMenu = c(5, 10, nlevels(as.factor(dt_in$Item))),
+                                   lengthMenu = c(5, nlevels(as.factor(dt_in$Item))),
                                    dom = 'C<"clear">lfrtip')) 
+        
+        if ( input$agency == "All" ) {
+        
+          dt %>%
+            formatStyle('StDev',
+                        background = styleColorBar(dt_in$StDev, 'lightpink'),
+                        backgroundSize = '100% 90%',
+                        backgroundRepeat = 'no-repeat',
+                        backgroundPosition = 'center')
+          
+        } else if ( input$agency %in% levels(unique(scrub_sis$agency)) ) {  
+          
+          dt %>%
+            formatStyle('Difference',
+                        background = styleColorBar(dt_in$Difference, 'lightpink'),
+                        backgroundSize = '100% 90%',
+                        backgroundRepeat = 'no-repeat',
+                        backgroundPosition = 'center')
+          
+        } else
+          print(paste0("Error.  Unrecognized input."))
+          
       })
        
       output$s2_dt <- renderDataTable({
@@ -894,9 +953,11 @@
           dt_in <-
             sec2Input() %>%
             group_by(item_desc) %>%
-            summarize(avg = round(mean(score), digits = 1)) %>% 
+            summarize(avg = round(mean(score), digits = 1),
+                      sd = round(sd(score), digits = 1)) %>% 
             left_join(df, id = "item_desc") %>%
-            rename(All = avg, Item = item_desc)
+            rename(All = avg, StDev = sd, Item = item_desc) %>%
+            arrange(desc(StDev))
           
         } else if ( input$agency %in% levels(unique(scrub_sis$agency)) ) {
           
@@ -913,18 +974,42 @@
             group_by(item_desc) %>%
             summarize(avg = round(mean(score), digits = 1)) %>% 
             left_join(df, id = "item_desc") %>%
-            rename(All.Others = avg, Item = item_desc)
+            mutate(differ = .[[3]] - .[[2]]) %>% # use col indices since names change
+            rename(All.Others = avg, Difference = differ, Item = item_desc) %>%
+            arrange(desc(Difference))
           
         } else
           print(paste0("Error.  Unrecognized input."))
         
-        
+        dt <-
         dt_in %>%
-          datatable(caption = 'Average Raw Scores on Section 2 Items, by CMH',
+          datatable(caption = 'Variation and Average Raw Scores on Section 2 Items, by CMH',
                     rownames = FALSE,
                     extensions = c('Responsive','ColVis'),
                     options = list(pageLength = nlevels(as.factor(dt_in$Item)), 
                                    dom = 'C<"clear">lfrtip')) 
+        
+        if ( input$agency == "All" ) {
+        
+          dt %>%
+            formatStyle('StDev',
+                        background = styleColorBar(dt_in$StDev, 'lightpink'),
+                        backgroundSize = '100% 90%',
+                        backgroundRepeat = 'no-repeat',
+                        backgroundPosition = 'center')
+          
+        } else if ( input$agency %in% levels(unique(scrub_sis$agency)) ) {
+          
+          dt %>%
+            formatStyle('Difference',
+                        background = styleColorBar(dt_in$Difference, 'lightpink'),
+                        backgroundSize = '100% 90%',
+                        backgroundRepeat = 'no-repeat',
+                        backgroundPosition = 'center')
+          
+        } else
+          print(paste0("Error.  Unrecognized input."))
+          
       })
       
       output$hist_sni <- renderPlotly({
@@ -950,6 +1035,8 @@
           layout(xaxis = list(title = "Support Needs Index Score", 
                               tickmode = "array"),
                  yaxis = list(title = "People assessed", showgrid = F),
+                 legend = list(xanchor = "right", yanchor = "top", x = 1, y = 1, 
+                               font = list(size = 10)),
                  annotations = list(
                    list(x = min(SupportNeedsIndex), xanchor = "left", 
                         y = 1, yanchor = "top", yref = "paper",
@@ -958,16 +1045,24 @@
         
         ifelse(
           input$central == "Mean",
-          yes = hist <- hist %>% add_trace(x = mean(SupportNeedsIndex), 
-                                           y = mean(SupportNeedsIndex),
+          yes = hist <- hist %>% add_trace(x = rep(mean(SupportNeedsIndex), 
+                                                   each = 2), 
+                                           y = c(0,200),
+                                           type = "line",
+                                           line = list(dash = 5),
+                                           marker = list(color = "#DA824F"),
                                            name = "Mean score",
-                                           showlegend = F,
-                                           mode = "line"),
-          no  = hist <- hist %>% add_trace(x = median(SupportNeedsIndex), 
-                                           y = median(SupportNeedsIndex),
+                                           hoverinfo = "x",
+                                           xaxis = "x"),
+          no  = hist <- hist %>% add_trace(x = rep(median(SupportNeedsIndex), 
+                                                   each = 2), 
+                                           y = c(0,200),
+                                           type = "line",
+                                           line = list(dash = 5),
+                                           marker = list(color = "#DA824F"),
                                            name = "Median score",
-                                           showlegend = F,
-                                           mode = "line")
+                                           hoverinfo = "x",
+                                           xaxis = "x")
         )
         
         hist
