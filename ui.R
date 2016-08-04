@@ -1030,6 +1030,13 @@ dashboardPage(
               collapsed = TRUE,
               width = NULL,
               uiOutput('id_drop'), # filter reactive based on selected filters
+              radioButtons(
+                "pick_dom",
+                label = "Display needs by:",
+                choices = c("SIS Section", "QOL Domain"), 
+                selected = "SIS Section",
+                inline = T
+              ),
               tabBox(
                 width = NULL,
                 tabPanel(

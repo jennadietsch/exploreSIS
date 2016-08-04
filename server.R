@@ -114,7 +114,7 @@
                                       2 = 'Extensive Support Needed'")) %>%
           left_join(needs, by = "item") %>%
           select(fake_id,agency,sis_date,LivingType,
-                 section,section_desc,item,item_desc,
+                 section,section_desc,item,item_desc,qol,
                  need_svc,score,
                  refer_ot,refer_nurs,refer_sp,refer_pt,refer_diet,
                  level)
@@ -126,7 +126,7 @@
         s1_filt <-
           sec1Input() %>%
           select(fake_id,agency,sis_date,
-                 section,section_desc,item,item_desc,
+                 section,section_desc,item,item_desc,qol,
                  need_svc,score,
                  refer_ot,refer_nurs,refer_sp,refer_pt,refer_diet,
                  type,type_n,frequency,frequency_n,DST,DST_n,       
@@ -137,7 +137,7 @@
         s2_filt <-
           sec2Input() %>%
           select(fake_id,agency,sis_date,
-                 section,section_desc,item,item_desc,
+                 section,section_desc,item,item_desc,qol,
                  need_svc,score,
                  refer_ot,refer_nurs,refer_sp,refer_pt,refer_diet,
                  type,type_n,frequency,frequency_n,DST,DST_n,       
@@ -148,7 +148,7 @@
         s3_filt <-
           sec3Input() %>%
           select(fake_id,agency,sis_date,
-                 section,section_desc,item,item_desc,
+                 section,section_desc,item,item_desc,qol,
                  need_svc,score,
                  refer_ot,refer_nurs,refer_sp,refer_pt,refer_diet,
                  level) %>%
@@ -1331,18 +1331,37 @@
                      detail = 'personal preferences',
                      value = 0.1, 
                      {
-                       
-                       DT_in <-
-                         s1_3Input() %>% 
-                         group_by(fake_id) %>%
-                         filter(fake_id == input$id_drop
-                                & as.Date(sis_date) == max(as.Date(sis_date))) %>%
-                         filter(import_to == T | import_for == T) %>%
-                         filter(score > 0) %>%
-                         arrange(section_desc,desc(score)) %>%
-                         ungroup() %>%
-                         select(section_desc,item_desc,score,
-                                type,frequency,DST,importance) 
+                       if ( input$pick_dom == "SIS Section") {
+                         
+                         DT_in <-
+                           s1_3Input() %>% 
+                           group_by(fake_id) %>%
+                           filter(fake_id == input$id_drop
+                                  & as.Date(sis_date) == max(as.Date(sis_date))) %>%
+                           filter(import_to == T | import_for == T) %>%
+                           filter(score > 0) %>%
+                           arrange(section_desc,desc(score)) %>%
+                           ungroup() %>%
+                           select(section_desc,item_desc,score,
+                                  type,frequency,DST,importance)
+                         
+                       } else if (input$pick_dom == "QOL Domain") {
+                         
+                         DT_in <-
+                           s1_3Input() %>% 
+                           group_by(fake_id) %>%
+                           filter(fake_id == input$id_drop
+                                  & as.Date(sis_date) == max(as.Date(sis_date))) %>%
+                           filter(import_to == T | import_for == T) %>%
+                           filter(score > 0) %>%
+                           arrange(qol,desc(score)) %>%
+                           ungroup() %>%
+                           select(qol,item_desc,score,
+                                  type,frequency,DST,importance)
+                         
+                       } else
+                         print(paste0("Error.  Unrecognized input."))
+                        
                        
                        DT_in %>%
                          datatable(
@@ -1369,19 +1388,39 @@
                      detail = 'personal needs',
                      value = 0.1, 
                      {
-                       DT_in <-
-                         s1_3Input() %>% 
-                         group_by(fake_id) %>%
-                         filter(fake_id == input$id_drop
-                                & as.Date(sis_date) == max(as.Date(sis_date))) %>%
-                         filter(need_svc == T) %>% # 
-                         filter(score > 0) %>%
-                         arrange(section_desc,desc(score)) %>%
-                         ungroup() %>%
-                         select(section_desc,item_desc,score,
-                                type,frequency,DST) 
                        
+                       if ( input$pick_dom == "SIS Section") {
                        
+                         DT_in <-
+                           s1_3Input() %>% 
+                           group_by(fake_id) %>%
+                           filter(fake_id == input$id_drop
+                                  & as.Date(sis_date) == max(as.Date(sis_date))) %>%
+                           filter(need_svc == T) %>% # 
+                           filter(score > 0) %>%
+                           arrange(section_desc,desc(score)) %>%
+                           ungroup() %>%
+                           select(section_desc,item_desc,score,
+                                  type,frequency,DST) 
+                       
+                       } else if (input$pick_dom == "QOL Domain") {
+                       
+                         DT_in <-
+                           s1_3Input() %>% 
+                           group_by(fake_id) %>%
+                           filter(fake_id == input$id_drop
+                                  & as.Date(sis_date) == max(as.Date(sis_date))) %>%
+                           filter(need_svc == T) %>% # 
+                           filter(score > 0) %>%
+                           arrange(qol,desc(score)) %>%
+                           ungroup() %>%
+                           select(qol,item_desc,score,
+                                  type,frequency,DST) 
+                         
+                       } else
+                         print(paste0("Error.  Unrecognized input."))
+                       
+                         
                        DT_in %>%
                          datatable(
                            rownames = F,
