@@ -882,7 +882,7 @@
             left_join(df, id = "item_desc") %>%
             rename(All = avg, StDev = sd, Item = item_desc) %>%
             arrange(desc(StDev))
-          
+
         } else if ( input$agency %in% levels(unique(scrub_sis$agency)) ) {
           
           df <-
@@ -903,7 +903,7 @@
             mutate(differ = .[[3]] - .[[2]]) %>% # use col indices since names change
             rename(All.Others = avg, Difference = differ, Item = item_desc) %>%
             arrange(desc(Difference))
-          
+
         } else
           print(paste0("Error.  Unrecognized input."))
         
@@ -958,7 +958,7 @@
             left_join(df, id = "item_desc") %>%
             rename(All = avg, StDev = sd, Item = item_desc) %>%
             arrange(desc(StDev))
-          
+
         } else if ( input$agency %in% levels(unique(scrub_sis$agency)) ) {
           
           df <-
@@ -977,7 +977,7 @@
             mutate(differ = .[[3]] - .[[2]]) %>% # use col indices since names change
             rename(All.Others = avg, Difference = differ, Item = item_desc) %>%
             arrange(desc(Difference))
-          
+
         } else
           print(paste0("Error.  Unrecognized input."))
         
@@ -1362,7 +1362,6 @@
                        } else
                          print(paste0("Error.  Unrecognized input."))
                         
-                       
                        DT_in %>%
                          datatable(
                            rownames = F,
@@ -1388,7 +1387,7 @@
                      detail = 'personal needs',
                      value = 0.1, 
                      {
-                       
+
                        if ( input$pick_dom == "SIS Section") {
                        
                          DT_in <-
@@ -1419,8 +1418,7 @@
                          
                        } else
                          print(paste0("Error.  Unrecognized input."))
-                       
-                         
+               
                        DT_in %>%
                          datatable(
                            rownames = F,

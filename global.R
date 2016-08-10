@@ -31,237 +31,39 @@
     
 # Load totals
   totals <- read.csv("data/totals.csv")
+
+# Load needs mapping table (created by "prep/sis_mappings.R" script)
+  needs <- read.csv("data/needs.csv")
   
-# CREATE NEEDS ELEMENTS MAPPING TABLE##
+# Load service mapping table (created by "prep/sis_mappings.R" script)
+  needs_matrix <- read.csv("data/needs_matrix.csv")
+    
+################################################################################ 
+# DEFINE FUNCTION: svs2sis (Service codes to SIS needs)
+
+# To get the SIS needs associated with a given HCPCS code
+# Assumes existence of needs_matrix df to map needs to svs
+# Can enter any list of HCPCS codes and fx will return related SIS needs
   
-  # Pull individual assessment elements from SIS data
-  sis_names <- data.frame(colnames(sis_full))
-  names(sis_names)[1] <- "field"
+  svs2sis <- function(hcpcs){
+    
+    library(dplyr); library(tidyr); library(magrittr)
+    
+    needs_matrix %>%
+      filter(Code %in% hcpcs) %>%
+      gather(item,yn,-Code) %>%
+      filter(yn == T) %>%
+      distinct(item) %>% #de-dup
+      as.list() %>%
+      return()
+    
+  }
   
-  needs <-
-    sis_names %>%
-    mutate(section = ifelse(grepl("^s[0-9]", field), 
-                            yes = gsub("_.*$", "", field),
-                            no = NA),
-           item = ifelse(grepl("^s[0-9]", field), 
-                         yes = gsub("fqy|dst|tos|to|for|notes|support","",field),
-                         no = NA),
-           item_type = ifelse(grepl("^s[0-9]", field), 
-                              yes = gsub("^.*_","",field),
-                              no = NA),
-           section_desc = car::recode(section,
-                                      "'s1a' = 'Home Living';
-                                      's1b' = 'Community Living';
-                                      's1c' = 'Lifelong Learning';
-                                      's1d' = 'Employment';
-                                      's1e' = 'Health and Safety';
-                                      's1f' = 'Social Activities';
-                                      's2' = 'Protection and Advocacy';
-                                      's3a' = 'Medical Supports';
-                                      's3b' = 'Behavioral Supports'"),
-           item_desc = car::recode(item,
-                                   "'s1a_1_' = 'Toilet';
-                                   's1a_2_' = 'Clothes';
-                                   's1a_3_' = 'Preparing food';
-                                   's1a_4_' = 'Eating food';
-                                   's1a_5_' = 'Housekeeping';
-                                   's1a_6_' = 'Dressing';
-                                   's1a_7_' = 'Hygiene';
-                                   's1a_8_' = 'Appliances';
-                                   's1b_1_' = 'Getting Around';
-                                   's1b_2_' = 'Recreation';
-                                   's1b_3_' = 'Public Services';
-                                   's1b_4_' = 'Visit Friends/Family';
-                                   's1b_5_' = 'Preferred Activities';
-                                   's1b_6_' = 'Shopping';
-                                   's1b_7_' = 'Community interaction';
-                                   's1b_8_' = 'Accessing Settings';
-                                   's1c_1_' = 'Learning interaction';
-                                   's1c_2_' = 'Learning decisions';
-                                   's1c_3_' = 'Problem solving';
-                                   's1c_4_' = 'Using technology';
-                                   's1c_5_' = 'Accessing training';
-                                   's1c_6_' = 'Academics';
-                                   's1c_7_' = 'Learning health skills';
-                                   's1c_8_' = 'Learning self-determination';
-                                   's1c_9_' = 'Learning self-management';
-                                   's1d_1_' = 'Job accomodations';
-                                   's1d_2_' = 'Specific job skills';
-                                   's1d_3_' = 'Co-worker interaction';
-                                   's1d_4_' = 'Supervisor interaction';
-                                   's1d_5_' = 'Work speed';
-                                   's1d_6_' = 'Work quality';
-                                   's1d_7_' = 'Changing assignments';
-                                   's1d_8_' = 'Seeking assistance';
-                                   's1e_1_' = 'Taking medications';
-                                   's1e_2_' = 'Avoiding hazards';
-                                   's1e_3_' = 'Obtaining health care';
-                                   's1e_4_' = 'Moving about';
-                                   's1e_5_' = 'Accessing emergency svs';
-                                   's1e_6_' = 'Nutritional diet';
-                                   's1e_7_' = 'Physical fitness';
-                                   's1e_8_' = 'Emotional well-being';
-                                   's1f_1_' = 'Socializing in home';
-                                   's1f_2_' = 'Recreation with others';
-                                   's1f_3_' = 'Socializing out of home';
-                                   's1f_4_' = 'Making friends';
-                                   's1f_5_' = 'Communicating with helpers';
-                                   's1f_6_' = 'Appropriate social skills';
-                                   's1f_7_' = 'Intimate relationships';
-                                   's1f_8_' = 'Volunteer work';
-                                   's2_1_' = 'Self-advocacy';
-                                   's2_2_' = 'Money management';
-                                   's2_3_' = 'Exploited by others';
-                                   's2_4_' = 'Legal responsibility';
-                                   's2_5_' = 'Participation';
-                                   's2_6_' = 'Legal services';
-                                   's2_7_' = 'Decision making';
-                                   's2_8_' = 'Other advocacy';
-                                   's3a_1_' = 'Oxygen therapy';
-                                   's3a_2_' = 'Postural drainage';
-                                   's3a_3_' = 'Chest PT';
-                                   's3a_4_' = 'Suctioning';
-                                   's3a_5_' = 'Oral stimulation';
-                                   's3a_6_' = 'Tube feeding';
-                                   's3a_7_' = 'Parental feeding';
-                                   's3a_8_' = 'Positioning';
-                                   's3a_9_' = 'Dressing wounds';
-                                   's3a_10_' = 'Prevent infection';
-                                   's3a_11_' = 'Seizure mgmt';
-                                   's3a_12_' = 'Dialysis';
-                                   's3a_13_' = 'Ostomy care';
-                                   's3a_14_' = 'Transfers';
-                                   's3a_15_' = 'Therapy svs';
-                                   's3a_16_' = 'Other medical';
-                                   's3b_1_' = 'Assault';
-                                   's3b_2_' = 'Property destruction';
-                                   's3b_3_' = 'Stealing';
-                                   's3b_4_' = 'Self injury';
-                                   's3b_5_' = 'Pica';
-                                   's3b_6_' = 'Suicide attempts';
-                                   's3b_7_'  = 'Sexual aggression';
-                                   's3b_8_' = 'Inappropriate';
-                                   's3b_9_' = 'Outbursts';
-                                   's3b_10_' = 'Wandering';
-                                   's3b_11_' = 'Substance abuse';
-                                   's3b_12_' = 'Mental health tx';
-                                   's3b_13_' = 'Other behavioral'"),
-           qol = car::recode(item,
-                                   "'s1a_1_' = 'Physical Wellbeing';
-                                   's1a_2_' = 'Physical Wellbeing';
-                                   's1a_3_' = 'Physical Wellbeing';
-                                   's1a_4_' = 'Physical Wellbeing';
-                                   's1a_5_' = 'Physical Wellbeing';
-                                   's1a_6_' = 'Physical Wellbeing';
-                                   's1a_7_' = 'Physical Wellbeing';
-                                   's1a_8_' = 'Physical Wellbeing';
-                                   's1b_1_' = 'Social Inclusion';
-                                   's1b_2_' = 'Social Inclusion';
-                                   's1b_3_' = 'Social Inclusion';
-                                   's1b_4_' = 'Interpersonal Relations';
-                                   's1b_5_' = 'Social Inclusion';
-                                   's1b_6_' = 'Social Inclusion';
-                                   's1b_7_' = 'Social Inclusion';
-                                   's1b_8_' = 'Social Inclusion';
-                                   's1c_1_' = 'Social Inclusion';
-                                   's1c_2_' = 'Personal Development';
-                                   's1c_3_' = 'Personal Development';
-                                   's1c_4_' = 'Personal Development';
-                                   's1c_5_' = 'Personal Development';
-                                   's1c_6_' = 'Personal Development';
-                                   's1c_7_' = 'Physical Wellbeing';
-                                   's1c_8_' = 'Self Determination';
-                                   's1c_9_' = 'Personal Development';
-                                   's1d_1_' = 'Material Wellbeing';
-                                   's1d_2_' = 'Material Wellbeing';
-                                   's1d_3_' = 'Material Wellbeing';
-                                   's1d_4_' = 'Material Wellbeing';
-                                   's1d_5_' = 'Material Wellbeing';
-                                   's1d_6_' = 'Material Wellbeing';
-                                   's1d_7_' = 'Material Wellbeing';
-                                   's1d_8_' = 'Material Wellbeing';
-                                   's1e_1_' = 'Physical Wellbeing';
-                                   's1e_2_' = 'Physical Wellbeing';
-                                   's1e_3_' = 'Physical Wellbeing';
-                                   's1e_4_' = 'Physical Wellbeing';
-                                   's1e_5_' = 'Physical Wellbeing';
-                                   's1e_6_' = 'Personal Development';
-                                   's1e_7_' = 'Personal Development';
-                                   's1e_8_' = 'Emotional Wellbeing';
-                                   's1f_1_' = 'Interpersonal Relations';
-                                   's1f_2_' = 'Interpersonal Relations';
-                                   's1f_3_' = 'Interpersonal Relations';
-                                   's1f_4_' = 'Interpersonal Relations';
-                                   's1f_5_' = 'Self Determination';
-                                   's1f_6_' = 'Interpersonal Relations';
-                                   's1f_7_' = 'Interpersonal Relations';
-                                   's1f_8_' = 'Social Inclusion';
-                                   's2_1_' = 'Rights';
-                                   's2_2_' = 'Self Determination';
-                                   's2_3_' = 'Rights';
-                                   's2_4_' = 'Rights';
-                                   's2_5_' = 'Social Inclusion';
-                                   's2_6_' = 'Rights';
-                                   's2_7_' = 'Self Determination';
-                                   's2_8_' = 'Rights';
-                                   's3a_1_' = 'Physical Wellbeing';
-                                   's3a_2_' = 'Physical Wellbeing';
-                                   's3a_3_' = 'Physical Wellbeing';
-                                   's3a_4_' = 'Physical Wellbeing';
-                                   's3a_5_' = 'Physical Wellbeing';
-                                   's3a_6_' = 'Physical Wellbeing';
-                                   's3a_7_' = 'Physical Wellbeing';
-                                   's3a_8_' = 'Physical Wellbeing';
-                                   's3a_9_' = 'Physical Wellbeing';
-                                   's3a_10_' = 'Physical Wellbeing';
-                                   's3a_11_' = 'Physical Wellbeing';
-                                   's3a_12_' = 'Physical Wellbeing';
-                                   's3a_13_' = 'Physical Wellbeing';
-                                   's3a_14_' = 'Physical Wellbeing';
-                                   's3a_15_' = 'Physical Wellbeing';
-                                   's3a_16_' = 'Physical Wellbeing';
-                                   's3b_1_' = 'Emotional Wellbeing';
-                                   's3b_2_' = 'Emotional Wellbeing';
-                                   's3b_3_' = 'Emotional Wellbeing';
-                                   's3b_4_' = 'Emotional Wellbeing';
-                                   's3b_5_' = 'Emotional Wellbeing';
-                                   's3b_6_' = 'Emotional Wellbeing';
-                                   's3b_7_'  = 'Emotional Wellbeing';
-                                   's3b_8_' = 'Emotional Wellbeing';
-                                   's3b_9_' = 'Emotional Wellbeing';
-                                   's3b_10_' = 'Emotional Wellbeing';
-                                   's3b_11_' = 'Emotional Wellbeing';
-                                   's3b_12_' = 'Emotional Wellbeing';
-                                   's3b_13_' = 'Emotional Wellbeing'")
-           ) %>%
-    filter(is.na(item) == F) %>%
-    group_by(section, section_desc, item, item_desc, qol) %>%
-    summarize(n = n()) %>%
-    filter(n > 1) %>% # Remove notes and other extraneous fields
-    # Flag necessary services (i.e. high risk)
-    mutate(need_svc = item %in% c("s1a_1_","s1a_2_","s1a_3_","s1a_4_",
-                                  "s1a_5_","s1a_6_","s1a_7_","s1a_8_",
-                                  "s1b_1_","s1b_6_","s1b_7_","s1b_8_",
-                                  "s1e_1_","s1e_2_","s1e_3_","s1e_4_",
-                                  "s1e_5_","s3a_1_","s3a_10_","s3a_11_",
-                                  "s3a_12_","s3a_13_","s3a_14_","s3a_15_",
-                                  "s3a_16_","s3a_2_","s3a_3_","s3a_4_",
-                                  "s3a_5_","s3a_6_","s3a_7_","s3a_8_",
-                                  "s3a_9_","s3b_1_","s3b_10_","s3b_11_",
-                                  "s3b_12_","s3b_13_","s3b_2_","s3b_4_",
-                                  "s3b_6_","s3b_7_","s3b_8_","s3b_9_"),
-           refer_ot = item %in% c("s1a_1_","s1a_2_","s1a_3_","s1a_4_",
-                                  "s1a_5_","s1a_6_","s1a_7_","s1b_2_",
-                                  "s1e_7_"),
-           refer_nurs = item %in% c("s1e_1_","s3a_1_","s3a_10_","s3a_11_",
-                                    "s3a_12_","s3a_13_","s3a_16_","s3a_2_",
-                                    "s3a_3_","s3a_4_","s3a_9_"),
-           refer_sp = item %in% c("s3a_5_","s3a_6_","s3a_7_"),
-           refer_pt = item %in% c("s3a_2_","s3a_3_","s1e_7_","s1b_1_",
-                                  "s1b_8_","s1e_4_","s3a_14_","s3a_8_"),
-           refer_diet = item %in% c("s1a_3_","s1a_4_","s1e_6_")
-           )  
+  # Example: 
+  # res_svs <- svs2sis(c("T1020","H2016"))  
   
+################################################################################  
+# TRANSFORM SECTIONS TO BREAK DOWN TYPE OF SERVICE  
 # Process heavy computations up front to allow for cleaner performance
   # Section 1
   s1_tos <-
