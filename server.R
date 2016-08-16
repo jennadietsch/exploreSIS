@@ -510,9 +510,10 @@
                     colnames = c('Interviewer',
                                  '# Assessments','Avg minutes',
                                  'Interviewing since'),
-                    extensions = c('Responsive','ColVis'),
+                    extensions = c('Responsive','Buttons'),
                     options = list(pageLength = 5, lengthMenu = c(5, 15),
-                                   dom = 'C<"clear">lfrtip')) %>%
+                                   dom = 'C<"clear">lfrtip',
+                                   buttons = c('colvis'))) %>%
           formatDate(5)
       })
 
@@ -916,10 +917,10 @@
           datatable(caption = paste0("Variation and Average Raw Scores on Section 1 Items (",
                                      input$select_area_s1, "), by CMH"),
                     rownames = FALSE,
-                    extensions = c('Responsive','ColVis'),
-                    options = list(pageLength = 5,
-                                   lengthMenu = c(5, nlevels(as.factor(dt_in$Item))),
-                                   dom = 'C<"clear">lfrtip')) 
+                    extensions = c('Responsive','Buttons'),
+                    options = list(pageLength = 5, lengthMenu = c(5, 10,20),
+                                   dom = 'C<"clear">lfrtip',
+                                   buttons = c('colvis'))) 
         
         if ( input$agency == "All" ) {
         
@@ -989,9 +990,10 @@
         dt_in %>%
           datatable(caption = 'Variation and Average Raw Scores on Section 2 Items, by CMH',
                     rownames = FALSE,
-                    extensions = c('Responsive','ColVis'),
-                    options = list(pageLength = nlevels(as.factor(dt_in$Item)), 
-                                   dom = 'C<"clear">lfrtip')) 
+                    extensions = c('Responsive','Buttons'),
+                    options = list(pageLength = 5, lengthMenu = c(5, 15),
+                                   dom = 'C<"clear">lfrtip',
+                                   buttons = c('colvis'))) 
         
         if ( input$agency == "All" ) {
         
@@ -1156,9 +1158,10 @@
                                  'Home','Community','Safety',
                                  'Learning','Employment', 'Social'),
                     caption = 'Average subscale scores by Agency',
-                    extensions = c('Responsive','ColVis'),
-                    options = list(pageLength = 5, lengthMenu = c(5, 10, 20),
-                                   dom = 'C<"clear">lfrtip')) %>%
+                    extensions = c('Responsive','Buttons'),
+                    options = list(pageLength = 5, lengthMenu = c(5, 10,20),
+                                   dom = 'C<"clear">lfrtip',
+                                   buttons = c('colvis'))) %>%
           formatStyle('medical',
                       background = styleColorBar(clin_by_dom$medical, 'lightseagreen'),
                       backgroundSize = '100% 90%',
@@ -1726,9 +1729,10 @@
                                  'Missing Supports Info','Missing Respondents',
                                  'State other than MI'),
                     caption = 'Data Quality Issues, by Interviewer',
-                    extensions = c('Responsive','ColVis'),
-                    options = list(pageLength = 5, lengthMenu = c(5, 10, 20),
-                                   dom = 'C<"clear">lfrtip')) %>%
+                    extensions = c('Responsive','Buttons'),
+                    options = list(pageLength = 5, lengthMenu = c(5, 10,20),
+                                   dom = 'C<"clear">lfrtip',
+                                   buttons = c('colvis'))) %>%
           formatStyle('unmatch_mcaid',
                       background = styleColorBar(mia$unmatch_mcaid, 'lightseagreen'),
                       backgroundSize = '100% 90%',
