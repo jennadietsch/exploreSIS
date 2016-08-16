@@ -269,13 +269,17 @@
         
         avg_person_wk <- avg_per_wk / recent_int
         
+        min_avg_wk <- round(avg_person_wk * 0.5, digits = 0)
+        max_avg_wk <- round(avg_person_wk * 2, digits = 0)
+        
+        
         sliderInput(
           inputId = "what_prod",
           "...each interviewer completed fewer/more assessments per week?",
-          min = round(avg_person_wk * 0.5, digits = 0),
-          max = round(avg_person_wk * 2, digits = 0),
+          min = 0,
+          max = ifelse(max_avg_wk < 3, yes = 3, no = max_avg_wk),
           value = avg_person_wk,
-          step = 1,
+          step = 0.5,
           round = T
         )
 
@@ -1325,6 +1329,59 @@
           
       })
       
+      output$ipos_caveat <- renderText({
+        
+        liv <-
+          scrub_sis %>%
+          group_by(fake_id) %>%
+          filter(as.Date(sis_date) == max(as.Date(sis_date))) %>% # Most recent per ID
+          filter(fake_id == input$id_drop) %>%
+          ungroup() %>%
+          mutate(LivingType = as.character(LivingType),
+                 LivingSituation = as.character(LivingSituation)) %>%
+          select(LivingType,LivingSituation) %>%
+          droplevels() %>%
+          as.list()
+        
+        if (liv$LivingType == "Facility") {
+          paste0("At the time when the SIS assessment was administered, this 
+                 person was living in a facility setting, specifically: ", 
+                 tolower(liv$LivingSituation), ".  ",
+                 "Since the SIS evaluates the intensity of support needed for 
+                 individuals to lead independent lives, it may require some 
+                 interpretation to apply its findings to a non-independent 
+                 setting.  ",
+                 "This person's actual support needs may vary from those 
+                 indicated on the SIS, because some level of CLS and PC services 
+                 can be assumed as available on a day-to-day basis.  
+                 The structured setting provided by the facility may therefore 
+                 decrease the frequency and daily support time needed to 
+                 support certain needs.")
+        } else if (liv$LivingType == "Family") {
+          paste0("At the time when the SIS assessment was administered, this 
+                 person was living in a family setting, specifically: ", 
+                 tolower(liv$LivingSituation), ".  ",
+                 "Since the SIS evaluates the intensity of support needed for 
+                 individuals to lead independent lives, it may require some 
+                 interpretation to apply its findings to a non-independent 
+                 setting.  ",
+                 "This person's actual support needs may vary from those 
+                 indicated on the SIS, because the setting provided by the 
+                 family home may decrease the frequency and daily support time 
+                 needed to support certain needs.  Additionally, some level of 
+                 family support may be more readily available to supplement 
+                 paid supports.")
+        } else if (liv$LivingType == "Independent") {
+          paste0("At the time when the SIS assessment was administered, this 
+                 person was living in an independent setting, specifically: ", 
+                 tolower(liv$LivingSituation), ".  ",
+                 "Since the SIS evaluates the intensity of support needed for 
+                 individuals to lead independent lives, its findings are the 
+                 most directly applicable to this setting.  ")
+        } else print(paste0("Error.  Unrecognized input."))
+        
+      })
+      
       output$ipos_tofor <- renderDataTable({
         
         withProgress(message = 'Checking...',
@@ -1444,6 +1501,73 @@
 
       })
       
+      output$ipos_pccls <- renderDataTable({
+        
+        withProgress(message = 'Listing...',
+                     detail = 'needs for PC/CLS',
+                     value = 0.1, 
+                     {
+                       
+                       pccls <- svs2sis(c("T1020","H2016"))
+                       
+                       if ( input$pick_dom == "SIS Section") {
+                         
+                         DT_in <-
+                           s1_3Input() %>% 
+                           group_by(fake_id) %>%
+                           filter(fake_id == input$id_drop
+                                  & as.Date(sis_date) == max(as.Date(sis_date))) %>%
+                           filter(item %in% pccls$item) %>%
+                           filter(need_svc == T) %>%  
+                           filter(score > 0) %>%
+                           arrange(desc(score)) %>%
+                           ungroup() %>%
+                           select(frequency,DST,type,score,
+                                  section_desc,item_desc) 
+                         
+                       } else if (input$pick_dom == "QOL Domain") {
+                         
+                         DT_in <-
+                           s1_3Input() %>% 
+                           group_by(fake_id) %>%
+                           filter(fake_id == input$id_drop
+                                  & as.Date(sis_date) == max(as.Date(sis_date))) %>%
+                           filter(item %in% pccls$item) %>%
+                           filter(need_svc == T) %>%  
+                           filter(score > 0) %>%
+                           arrange(desc(score)) %>%
+                           ungroup() %>%
+                           select(frequency,DST,type,score,
+                                  qol,item_desc) 
+                         
+                       } else
+                         print(paste0("Error.  Unrecognized input."))
+                       
+                       DT_in %>%
+                         datatable(
+                           rownames = F,
+                           colnames = c('Frequency','Daily Support Time','Type of Support',
+                                        'Score','Area','Need'
+                                        ),
+                           options = list(pageLength = nrow(DT_in),
+                                          dom = 't')
+                         ) %>%
+                         formatStyle(
+                           'score',
+                           color = styleInterval(c(6), c("#800026","#ffffcc")),
+                           backgroundColor = styleInterval(c(1:8), brewer.pal(9,"YlOrRd"))
+                         ) %>%
+                         formatStyle(
+                           'type', 
+                           color = styleEqual(c("Some Support Needed","Extensive Support Needed"), 
+                                              c("#800026", "#fc4e2a")),
+                           fontWeight = styleEqual(c("Some Support Needed","Extensive Support Needed"), 
+                                                   c('bold', 'bold'))
+                         )
+                     })
+        
+      })
+      
       output$ipos_refer <- renderDataTable({
         
         withProgress(message = 'Thinking...',
@@ -1466,11 +1590,14 @@
                                                 'refer_sp' = 'Speech Pathology';
                                                 'refer_pt' = 'Physical Therapy';
                                                 'refer_diet' = 'Dietician'")) %>%
-                       select(item_desc,refer_to,YorN) %>%
+                       select(refer_to,item_desc,YorN) %>%
                        group_by(refer_to) %>%
-                       summarize(needs = n()) %>%
+                       summarize(related_needs = paste(item_desc, collapse=", "),
+                                 # Concatenate needs
+                                 needs = n()) %>%
                        ungroup() %>%
-                       arrange(desc(needs))
+                       arrange(desc(needs)) %>%
+                       select(-needs)
                      
                      DT_in %>%
                          datatable(

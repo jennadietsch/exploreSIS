@@ -1094,6 +1094,9 @@ dashboardPage(
                   ),
                   h4("Limitations"),
                   p(
+                    textOutput("ipos_caveat")
+                  ),
+                  p(
                     "The IDs for individual profiles which are shown in the 
                     drop-down do not correspond to individuals and is currently 
                     intended only as an example of how SIS data might be used in 
@@ -1186,8 +1189,27 @@ dashboardPage(
                   )
                 ),
                 tabPanel(
-                  "CLS Guidance",
-                  h4("Coming soon")
+                  "PC/CLS",
+                  p(
+                    "The table below shows needs related to personal care and 
+                    community living:"
+                  ),
+                  dataTableOutput("ipos_pccls"),
+                  p(
+                    "While this view identifies needs related to personal care 
+                    and community living, the fact that an item is included 
+                    here does not necessarily mean that there is a medical need 
+                    for the provision of services related to these areas.  
+                    Additional assessment may be required in order to determine 
+                    whether a specific service is medically necessary for this 
+                    person."
+                  ),
+                  p(
+                    "Needs from the areas listed above which were endorsed by 
+                    the person or their supports or included among additional 
+                    needs are also included in the ",
+                    em("PC/CLS"), " tab and are repeated here."
+                  )
                 ),
                 tabPanel(
                   "Potential Referrals",
