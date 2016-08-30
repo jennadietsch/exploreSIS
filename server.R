@@ -1623,7 +1623,7 @@
             group_by(fake_id) %>% 
             filter(as.Date(sis_date) == max(as.Date(sis_date))) %>% # Most recent per ID
             ungroup() %>% droplevels() %>%
-            select(homeliving_std,commliving_std,hlthsafety_std,
+            select(LivingType,homeliving_std,commliving_std,hlthsafety_std,
                    lifelearng_std,social_std,self_advoc:other_advoc,s3a_Score_Total,
                    s3b_Score_Total) %>%
             rename(home = homeliving_std, 
@@ -1635,8 +1635,11 @@
                    other_advocacy = other_advoc,
                    medical = s3a_Score_Total,
                    behavioral = s3b_Score_Total) %>%
-            mutate_each(funs(as.numeric)) %>%
-            scale() 
+            mutate_each(funs(as.numeric),-LivingType) %>%
+            mutate_each(funs(scale),-LivingType) %>%
+            # Filter after scaling
+            filter(LivingType %in% input$living_heat) %>%
+            select(-LivingType)
         
         } else if ( input$agency %in% levels(unique(scrub_sis$agency)) ) {
         
@@ -1647,7 +1650,7 @@
             group_by(fake_id) %>% 
             filter(as.Date(sis_date) == max(as.Date(sis_date))) %>% # Most recent per ID
             ungroup() %>% droplevels() %>%
-            select(homeliving_std,commliving_std,hlthsafety_std,
+            select(LivingType,homeliving_std,commliving_std,hlthsafety_std,
                    lifelearng_std,social_std,self_advoc:other_advoc,s3a_Score_Total,
                    s3b_Score_Total) %>%
             rename(home = homeliving_std, 
@@ -1659,8 +1662,11 @@
                    other_advocacy = other_advoc,
                    medical = s3a_Score_Total,
                    behavioral = s3b_Score_Total) %>%
-            mutate_each(funs(as.numeric)) %>%
-            scale() 
+            mutate_each(funs(as.numeric),-LivingType) %>%
+            mutate_each(funs(scale),-LivingType) %>%
+            # Filter after scaling
+            filter(LivingType %in% input$living_heat) %>%
+            select(-LivingType) 
           
         } else
           print(paste0("Error.  Unrecognized input.")) 
@@ -1671,8 +1677,8 @@
                      value = 0.1, 
                      {d3heatmap(heat, 
                                 colors = "Blues",
+                                dendrogram = "row",
                                 k_row = input$need_rows, 
-                                k_col = input$need_cols,
                                 theme = "",
                                 yaxis_font_size =  "0pt",
                                 show_grid = F)
