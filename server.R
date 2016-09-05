@@ -269,9 +269,8 @@
         
         avg_person_wk <- avg_per_wk / recent_int
         
-        min_avg_wk <- round(avg_person_wk * 0.5, digits = 0)
-        max_avg_wk <- round(avg_person_wk * 2, digits = 0)
-        
+        min_avg_wk <- round(ceiling(avg_person_wk) * 0.5, digits = 0)
+        max_avg_wk <- round(ceiling(avg_person_wk) * 3, digits = 0)
         
         sliderInput(
           inputId = "what_prod",
