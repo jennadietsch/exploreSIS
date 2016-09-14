@@ -216,7 +216,8 @@
                              ifelse(import_to == T, "To",
                                     ifelse(import_for == T, "For",
                                            "Not endorsed")))) %>%
-    select(-import_to_n, -import_for_n, -n)
+    select(-import_to_n, -import_for_n, -n) %>%
+    droplevels()
   
   # Process Section 2
   s2_tos <-
@@ -336,7 +337,8 @@
     select(id, fake_id = fake_id.x, agency = agency.x, 
            sis_date = sis_date.x, item = item.x, 
            type, type_n, frequency, frequency_n, DST, DST_n,
-           import_to_n, import_for_n)
+           import_to_n, import_for_n) %>%
+    droplevels()
   
   # Remove intermediate tables
   rm(s2_dst); rm(s2_fqy); rm(s2_tos); rm(s2_to); rm(s2_for)

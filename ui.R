@@ -12,14 +12,9 @@ dashboardPage(
         icon = icon("line-chart")
       ),
       menuItem(
-        "Support Needs", 
+        "Population Needs", 
         tabName = "support", 
         icon = icon("life-ring")
-      ),
-      menuItem(
-        "Protection", 
-        tabName = "protection", 
-        icon = icon("shield")
       ),
       menuItem(
         "Medical/Behavioral", 
@@ -469,9 +464,10 @@ dashboardPage(
           column(
             width = 6,
             box(
-              title = "Type of Service", 
+              title = "Types of Need (Section 1: Supports)", 
               status = "warning",
-              collapsible = TRUE, 
+              collapsible = TRUE,
+              collapsed = F,
               width = NULL,
               selectInput(
                 "select_area_s1",
@@ -612,19 +608,12 @@ dashboardPage(
                   )
                 )
               )
-            )
-          )
-        )
-      ),
-      tabItem(
-        tabName = "protection",
-        fluidRow(
-          column(
-            width = 6,
+            ),
             box(
-              title = "Type of Service", 
+              title = "Types of Need (Section 2: Protection)", 
               status = "warning",
               collapsible = TRUE, 
+              collapsed = TRUE,
               width = NULL,
               tabBox(
                 width = NULL,
@@ -646,8 +635,9 @@ dashboardPage(
                       p(
                         "The table shows the average (", em("All"), 
                         ") and standard deviation (", em("StDev"),
-                        ") of raw scores for each item from the selected 
-                        section of the SIS.  The standard deviation can be used 
+                        ") of raw scores for each item from section 2 of the SIS,
+                        which addresses needs related to protection and advocacy.  
+                        The standard deviation can be used 
                         to look at items whose total score has the greatest 
                         amount of variation across assessments.  You can then 
                         explore potential causes of variation using the 
@@ -697,7 +687,7 @@ dashboardPage(
                           people needed full physical support on a monthly basis? 
                           How many minutes did they need it?"
                         )
-                      ),
+                        ),
                       p(
                         "When you click on", em("alpha"), " or ", em("size"), 
                         ", the chart sorts the variable alphabetically or by size.  
@@ -710,7 +700,7 @@ dashboardPage(
                         on the top, there will be one color from each type of 
                         support weaving down through the other variables."
                       )
-                    ),
+                      ),
                     tabPanel(
                       "The Data", 
                       br(),
@@ -732,30 +722,30 @@ dashboardPage(
                         em("Type of Support:"), 
                         "The nature of support that would be needed by a person to 
                         engage in the activity in question."
-                      ),
-                      strong("Definitions"),
-                      p(
-                        "The chart uses short words and phrases for ease of use. 
-                        Here are the full definitions from the SIS tool itself ",
-                        a(
-                          href = "http://aaidd.org/docs/default-source/sis-docs/sisfrequencyandscoringclarifications.pdf?sfvrsn=2",
-                          "as defined by AAIDD"
-                        ),":",
-                        br(),
-                        em("Frequency:"),
-                        "Hourly = hourly or more frequently; 
-                        Daily = at least once a day but not once an hour; 
-                        Weekly = at least once a week, but not once a day; 
-                        Monthly = at least once a month, but not once a week; 
-                        None = none or less than monthly",
-                        br(),
-                        em("Daily Support Time (DST):"),
-                        "Over 4 hrs = 4 hours or more; 
-                        2-4 hrs = 2 hours to less than 4 hours; 
-                        Under 2 hrs = 30 minutes to less than 2 hours; 
-                        Under 30 min = less than 30 minutes; 
-                        None = None"
-                      )
+                    ),
+                    strong("Definitions"),
+                    p(
+                      "The chart uses short words and phrases for ease of use. 
+                      Here are the full definitions from the SIS tool itself ",
+                      a(
+                        href = "http://aaidd.org/docs/default-source/sis-docs/sisfrequencyandscoringclarifications.pdf?sfvrsn=2",
+                        "as defined by AAIDD"
+                      ),":",
+                      br(),
+                      em("Frequency:"),
+                      "Hourly = hourly or more frequently; 
+                      Daily = at least once a day but not once an hour; 
+                      Weekly = at least once a week, but not once a day; 
+                      Monthly = at least once a month, but not once a week; 
+                      None = none or less than monthly",
+                      br(),
+                      em("Daily Support Time (DST):"),
+                      "Over 4 hrs = 4 hours or more; 
+                      2-4 hrs = 2 hours to less than 4 hours; 
+                      Under 2 hrs = 30 minutes to less than 2 hours; 
+                      Under 30 min = less than 30 minutes; 
+                      None = None"
+                    )
                     )
                   )
                 )
@@ -779,8 +769,8 @@ dashboardPage(
                 selectInput(
                   "living",
                   label = NULL,
-                  choices = levels(unique(scrub_sis$LivingType)), 
-                  selected = levels(unique(scrub_sis$LivingType)), 
+                  choices = c(levels(unique(scrub_sis$LivingType)),"Not provided"), 
+                  selected = c(levels(unique(scrub_sis$LivingType)),"Not provided"), 
                   multiple = TRUE
                 )
               ),

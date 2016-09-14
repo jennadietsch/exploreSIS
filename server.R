@@ -59,24 +59,23 @@
         
       })
       
+      sec1Input <- reactive({
+        
+        s1 %<>% 
+          filter(as.Date(sis_date) >= input$dateRange[1]
+                 & as.Date(sis_date) <= input$dateRange[2])
+        
+      })
+      
       tos1Input <- reactive({
         
-        tos_section1 <-
-          s1 %>%
+        sec1Input() %>%
           group_by(agency, section_desc, item_desc, type, frequency, DST) %>%
           summarize(n = n(),
                     type_tot = sum(type_n),
                     frequency_tot = sum(frequency_n),
                     DST_tot = sum(DST_n)) %>%
           ungroup()
-        
-      })
-      
-      sec1Input <- reactive({
-        
-        s1 %<>% 
-          filter(as.Date(sis_date) >= input$dateRange[1]
-                 & as.Date(sis_date) <= input$dateRange[2])
         
       })
       
@@ -90,8 +89,7 @@
       
       tos2Input <- reactive({
         
-        tos_section2 <-
-          sec2Input() %>%
+        sec2Input() %>%
           group_by(agency, item_desc, type, frequency, DST) %>%
           summarize(n = n(),
                     type_tot = sum(type_n),
@@ -302,7 +300,7 @@
         tos2 <- tos2Input()
         selectInput("s2domain",
                     label = "Select a specific need:",
-                    choices = levels(unique(as.factor(tos2$item_desc))), 
+                    choices = levels(droplevels(unique(as.factor(tos2$item_desc)))), 
                     selected = "")
       })
       
@@ -1048,11 +1046,13 @@
                         showarrow = F, align = "left",
                         text = notetxt))) 
         
+        max_hist <- max(hist(hist$SupportNeedsIndex)$counts,na.rm=TRUE)
+        
         ifelse(
           input$central == "Mean",
           yes = hist <- hist %>% add_trace(x = rep(mean(SupportNeedsIndex), 
                                                    each = 2), 
-                                           y = c(0,200),
+                                           y = c(0,max_hist),
                                            type = "line",
                                            line = list(dash = 5),
                                            marker = list(color = "#DA824F"),
@@ -1061,7 +1061,7 @@
                                            xaxis = "x"),
           no  = hist <- hist %>% add_trace(x = rep(median(SupportNeedsIndex), 
                                                    each = 2), 
-                                           y = c(0,200),
+                                           y = c(0,max_hist),
                                            type = "line",
                                            line = list(dash = 5),
                                            marker = list(color = "#DA824F"),
@@ -1206,6 +1206,8 @@
       
       output$conditions <- renderPlotly({
         
+        liv_filt <- recode(input$living, "'Not provided' = NA")
+        
         radio <- if (input$radio_mb == "Both") {c("Medical Supports","Behavioral Supports")
         } else if (input$radio_mb == "Medical") {c("Medical Supports")
         } else if (input$radio_mb == "Behavioral") {c("Behavioral Supports")
@@ -1216,7 +1218,7 @@
             sec3Input() %>%
             filter(score > 0
                    & section_desc %in% radio
-                   & LivingType %in% input$living) %>%
+                   & LivingType %in% liv_filt) %>%
             group_by(item_desc,level) %>%
             summarize(n = n()) %>%
             ungroup() %>%
@@ -1227,7 +1229,7 @@
             filter(agency == input$agency
                    & score > 0
                    & section_desc %in% radio
-                   & LivingType %in% input$living) %>%
+                   & LivingType %in% liv_filt) %>%
             group_by(item_desc,level) %>%
             summarize(n = n()) %>%
             ungroup() %>%
@@ -1248,11 +1250,13 @@
 
       output$hist_mb <- renderPlotly({
         
+        liv_filt <- recode(input$living, "'Not provided' = NA")
+        
         if ( input$agency == "All" ) {
-          scrub_sis_filt <- sisInput() %>% filter(LivingType %in% input$living)
+          scrub_sis_filt <- sisInput() %>% filter(LivingType %in% liv_filt)
           notescope <- "across all CMHSPs"
         } else if ( input$agency %in% levels(unique(scrub_sis$agency)) ) {
-          scrub_sis_filt <- sisInput() %>% filter(agency == input$agency & LivingType %in% input$living)
+          scrub_sis_filt <- sisInput() %>% filter(agency == input$agency & LivingType %in% liv_filt)
           notescope <- paste0("at ",input$agency)
         } else
           print(paste0("Error.  Unrecognized input."))
@@ -1260,6 +1264,9 @@
         if ( input$radio_mbhist == "Medical" ) {
           notetxt <- paste0("Distribution of needs<br>for medical issues<br>",
                             notescope)
+          
+          max_hist <- max(hist(scrub_sis_filt$s3a_Score_Total)$counts,na.rm = T)
+          
           hist <-
             scrub_sis_filt %>%
             plot_ly(x = s3a_Score_Total,
@@ -1276,10 +1283,24 @@
                      list(x = max(s3a_Score_Total), xanchor = "right", 
                           y = 1, yanchor = "top", yref = "paper",
                           showarrow = F, align = "left",
-                          text = notetxt)))
+                          text = notetxt))) %>% 
+            add_trace(x = rep(mean(s3a_Score_Total), 
+                              each = 2), 
+                      y = c(0,max_hist),
+                      type = "line",
+                      line = list(dash = 5),
+                      marker = list(color = "#DA824F"),
+                      name = "Mean",
+                      hoverinfo = "x",
+                      xaxis = "x")
+          
         } else if ( input$radio_mbhist == "Behavioral" ) {
+          
           notetxt <- paste0("Distribution of needs<br>for behavioral issues<br>",
                             notescope)
+          
+          max_hist <- max(hist(scrub_sis_filt$s3b_Score_Total)$counts,na.rm=TRUE)
+          
           hist <-
             scrub_sis_filt %>%
             plot_ly(x = s3b_Score_Total,
@@ -1293,10 +1314,19 @@
                                 tickmode = "array"),
                    yaxis = list(title = "People assessed", showgrid = F),
                    annotations = list(
-                     list(x = max(s3a_Score_Total), xanchor = "right", 
+                     list(x = max(s3b_Score_Total), xanchor = "right", 
                           y = 1, yanchor = "top", yref = "paper",
                           showarrow = F, align = "left",
-                          text = notetxt)))
+                          text = notetxt))) %>% 
+            add_trace(x = rep(mean(s3b_Score_Total), 
+                              each = 2), 
+                      y = c(0,max_hist),
+                      type = "line",
+                      line = list(dash = 5),
+                      marker = list(color = "#DA824F"),
+                      name = "Mean",
+                      hoverinfo = "x",
+                      xaxis = "x")
         } else
           print(paste0("Error.  Unrecognized input."))
          
