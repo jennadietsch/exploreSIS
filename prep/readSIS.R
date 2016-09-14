@@ -158,7 +158,7 @@
                                  'Privateresidencewithfamily' = 'Family';
                                  'Privateresidencewithfamilymembers' = 'Family';
                                  'SpecializedresidentialAFC' = 'Facility';
-                                 '' = 'Not Provided'")
+                                 '' = NA")
     
     sub_sis$LivingType <- as.factor(sub_sis$LivingType)
 
