@@ -16,52 +16,56 @@
                       colnames(sis_full), perl = TRUE))]
   
 # Convert all date/time to POSIXct format
+# Calculate length of interview, "InterviewStartTime" to "InterviewEndTime"
+# If dates are stored as POSIXct, don't convert and just mutate vars
   library(lubridate)
-  # Remove hms from sis_completed_dt and convert it
-    sis$sis_completed_dt <- gsub( " .*$", "", sis$sis_completed_dt)
-  # Paste sis_completed_dt and InterviewStartTime, InterviewEndTime
-    sis$InterviewStartTime <- as.character(sis$InterviewStartTime)
-    sis$InterviewEndTime <- as.character(sis$InterviewEndTime)
-  # Convert InterviewStartTime, InterviewEndTime to mdy_hms
-    sis$InterviewStartTime <- paste(sis$sis_completed_dt,
-                                    sis$InterviewStartTime, sep = " ")
-    sis$InterviewEndTime <- paste(sis$sis_completed_dt,
-                                    sis$InterviewEndTime, sep = " ")
-    
-    
-    sis$sis_completed_dt <- mdy(sis$sis_completed_dt)
-
-  # Convert DOB
-    sis$sis_cl_dob_dt <- gsub( " .*$", "", sis$sis_cl_dob_dt)
-    sis$sis_cl_dob_dt <- mdy(sis$sis_cl_dob_dt)
   
-# Create calculated time variables
-  # Calculate length of interview, "InterviewStartTime" to "InterviewEndTime"
-  sis <-
-  sis %>%
-    mutate(start = lubridate::mdy_hms(InterviewStartTime),
-           end = lubridate::mdy_hms(InterviewEndTime),
-           duration = as.numeric(difftime(end, start, units = "mins")),
-           DaysSince = as.POSIXct(today()) - sis_completed_dt,
-           ClientAge = round((sis_completed_dt - sis_cl_dob_dt)/365.242, digits = 1))  # Calculate age at assessment
- 
-# Calculate max estimated hours per area
-  # recode Frequency fields as numeric # of instances / mo
-    # 0 = None or Less Than Monthly (Up to 11 Times a Year)
-    # 1 = At Least Once a Month, But Not Once a Week
-    # 2 = At Least Once a Week, But Not Once a Day (Up to 6 Days a Week)
-    # 3 = At Least Once a Day, But Not Once an Hour (At Least 7 Days a Week)
-    # 4 = Hourly or More Frequently (24 Hours a Day)
-  # recode Daily Support Time fields as numeric max # minutes
-    # 0 = None
-    # 1 = Less Than 30 Minutes
-    # 2 = 30 Minutes to Less Than 2 Hours
-    # 3 = 2 Hours to Less Than 4 Hours
-    # 4 = 4 Hours or More 
+  if (is.POSIXct(sis$sis_completed_dt) == F) {
+    sis %<>%
+      mutate(sis_completed_dt = gsub(" .*$", "", 
+                                     as.character(sis_completed_dt)),
+             # Remove hms from sis_completed_dt and convert it
+             sis_completed_dt = mdy(sis_completed_dt),
+             # Paste sis_completed_dt and InterviewStartTime, InterviewEndTime
+             InterviewStartTime = as.character(InterviewStartTime),
+             InterviewEndTime = as.character(InterviewEndTime),
+             # Convert InterviewStartTime, InterviewEndTime to mdy_hms
+             InterviewStartTime = paste(sis_completed_dt,InterviewStartTime,
+                                        sep = " "),
+             InterviewEndTime = paste(sis_completed_dt,InterviewEndTime,
+                                      sep = " "),
+             start = lubridate::ymd_hms(InterviewStartTime),
+             end = lubridate::ymd_hms(InterviewEndTime),
+             duration = as.numeric(difftime(end, start, units = "mins")),
+             DaysSince = as.POSIXct(today()) - as.POSIXct(sis_completed_dt))
+  } else {
+    sis %<>%
+      rename(start = InterviewStartTime,
+             end = InterviewEndTime) %>%
+      mutate(duration = as.numeric(difftime(end, start, units = "mins")),
+             DaysSince = as.POSIXct(today()) - as.POSIXct(sis_completed_dt))
+  }
+  
+
+# Convert DOB and calulate age at time of assessment
+
+if (is.POSIXct(sis$sis_cl_dob_dt) == F) {
+  # Create calculated time variables
+  sis %<>%
+    mutate(sis_cl_dob_dt = gsub( " .*$", "", sis_cl_dob_dt),
+           sis_cl_dob_dt = mdy(sis_cl_dob_dt),
+           ClientAge = round((sis_completed_dt - sis_cl_dob_dt)/365.242, 
+                             digits = 1))  # Calculate age at assessment
+} else {
+  sis %<>%
+    mutate(ClientAge = round((sis_completed_dt - sis_cl_dob_dt)/365.242, 
+                             digits = 1))  # Calculate age at assessment
+}
+  
 
 # Create subset of summary variables
   sub_sis <- 
-    sis %>%
+  sis %>%
     select(sis_id, 
            mcaid_id = sis_track_num, # map correct field
            interviewer_orig = sis_int_email,
@@ -91,7 +95,7 @@
            TotalStandard,
            TotalPercentile,
            # And Section 1
-           s1a_1_fqy:s1f_8_for,
+           s1a_1_fqy:s1f_8_for,s1f_Score_Raw,
            # And Section 2
            s2_1_fqy:s2_Score_Eight_Raw,
            # And Section 3
@@ -164,8 +168,4 @@
 
 # Assumes all interviewers current unless defined in local file
   sub_sis <- sub_sis %>% mutate(current_int = TRUE) # stop-gap until file submitted
-    
-# Get rid on the non-essentials
-    
-    rm(current)
     
