@@ -169,7 +169,3 @@ if (is.POSIXct(sis$sis_cl_dob_dt) == F) {
 # Assumes all interviewers current unless defined in local file
   sub_sis <- sub_sis %>% mutate(current_int = TRUE) # stop-gap until file submitted
     
-# Get rid on the non-essentials
-    
-    rm(current)
-    
