@@ -25,7 +25,7 @@ open404 %>%
   rename(HCPCS = Code) %>%
   group_by(HCPCS) %>%
   # Summarize cost by HCPCS code (without modifiers)
-  summarise(cost = sum(SumOfCost, na.rm = T),
+  summarize(cost = sum(SumOfCost, na.rm = T),
             units = sum(SumOfUnits, na.rm = T),
             unit_hrs = max(Unit_Hours, na.rm = T),
             med_unitcost = median(CostPerUnit, na.rm = T),
