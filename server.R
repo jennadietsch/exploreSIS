@@ -781,7 +781,8 @@
             filter(item_desc == input$s1domain) %>%
             select(-item_desc,-section_desc) %>%
             group_by(type,frequency,DST,agency) %>%
-            summarize(n = sum(n))
+            summarize(n = sum(n)) %>%
+            arrange(desc(n))
           
           parset(
             tos_parset,
@@ -799,7 +800,8 @@
             filter(agency == input$agency 
                    & item_desc == input$s1domain) %>%
             group_by(type,frequency,DST) %>%
-            summarize(n = sum(n))
+            summarize(n = sum(n)) %>%
+            arrange(desc(n))
           
           parset(
             tos_parset,
@@ -823,7 +825,8 @@
             filter(item_desc == input$s2domain) %>%
             select(-item_desc) %>%
             group_by(type,frequency,DST,agency) %>%
-            summarize(n = sum(n))
+            summarize(n = sum(n)) %>%
+            arrange(desc(n))
           
           parset(
             tos_parset,
@@ -841,7 +844,8 @@
             filter(agency == input$agency 
                    & item_desc == input$s2domain) %>%
             group_by(type,frequency,DST) %>%
-            summarize(n = sum(n))
+            summarize(n = sum(n)) %>%
+            arrange(desc(n))
           
           parset(
             tos_parset,
@@ -1026,17 +1030,26 @@
         } else
           print(paste0("Error.  Unrecognized input."))
         
+        minx <- min(scrub_sis_filt$SupportNeedsIndex)
+        maxx <- max(scrub_sis_filt$SupportNeedsIndex)
+        sizex <- (maxx - minx) / input$sni_bins
+          
         hist <-
         scrub_sis_filt %>%
           plot_ly(x = SupportNeedsIndex,
                   opacity = 0.6, 
+                  autobinx = F,
                   type = "histogram",
+                  xbins = list(start = minx, 
+                               end = maxx, 
+                               size = sizex),
                   hoverinfo = "all", 
                   name = "people",
                   showlegend = F,
                   mode = "markers") %>%
           layout(xaxis = list(title = "Support Needs Index Score", 
-                              tickmode = "array"),
+                              tickmode = "array",range = c(minx, maxx), autorange = F,
+                              autotick = F, tick0 = minx, dtick = sizex),
                  yaxis = list(title = "People assessed", showgrid = F),
                  legend = list(xanchor = "right", yanchor = "top", x = 1, y = 1, 
                                font = list(size = 10)),
@@ -1046,7 +1059,8 @@
                         showarrow = F, align = "left",
                         text = notetxt))) 
         
-        max_hist <- max(hist(hist$SupportNeedsIndex)$counts,na.rm=TRUE)
+        max_hist <- max(hist(hist$SupportNeedsIndex,
+                             breaks=input$sni_bins)$counts,na.rm=TRUE)
         
         ifelse(
           input$central == "Mean",
@@ -1265,19 +1279,32 @@
           notetxt <- paste0("Distribution of needs<br>for medical issues<br>",
                             notescope)
           
-          max_hist <- max(hist(scrub_sis_filt$s3a_Score_Total)$counts,na.rm = T)
+          minx <- min(scrub_sis_filt$s3a_Score_Total)
+          maxx <- max(scrub_sis_filt$s3a_Score_Total)
+          sizex <- (maxx - minx) / input$mb_bins
+          
+          max_hist <- max(hist(scrub_sis_filt$s3a_Score_Total,
+                               breaks=input$mb_bins)$counts,na.rm = T)
           
           hist <-
             scrub_sis_filt %>%
             plot_ly(x = s3a_Score_Total,
                     opacity = 0.6, 
+                    autobinx = F,
                     type = "histogram",
+                    xbins = list(start = minx, 
+                                 end = maxx, 
+                                 size = sizex),
                     hoverinfo = "all",  
                     name = "people",
                     showlegend = F,
                     mode = "markers") %>%
             layout(xaxis = list(title = "Number of medical needs", 
-                                tickmode = "array"),
+                                tickmode = "array",
+                                range = c(minx, maxx), 
+                                autorange = F,
+                                autotick = F, 
+                                tick0 = minx, dtick = sizex),
                    yaxis = list(title = "People assessed", showgrid = F),
                    annotations = list(
                      list(x = max(s3a_Score_Total), xanchor = "right", 
@@ -1299,19 +1326,34 @@
           notetxt <- paste0("Distribution of needs<br>for behavioral issues<br>",
                             notescope)
           
-          max_hist <- max(hist(scrub_sis_filt$s3b_Score_Total)$counts,na.rm=TRUE)
+          minx <- min(scrub_sis_filt$s3b_Score_Total)
+          maxx <- max(scrub_sis_filt$s3b_Score_Total)
+          sizex <- (maxx - minx) / input$mb_bins
+          
+          max_hist <- max(hist(scrub_sis_filt$s3b_Score_Total,
+                               breaks=input$mb_bins)$counts,na.rm=TRUE)
           
           hist <-
             scrub_sis_filt %>%
             plot_ly(x = s3b_Score_Total,
                     opacity = 0.6, 
+                    autobinx = F,
                     type = "histogram",
+                    xbins = list(start = minx, 
+                                 end = maxx, 
+                                 size = sizex),
                     hoverinfo = "all",  
                     name = "people",
                     showlegend = F,
                     mode = "markers") %>%
             layout(xaxis = list(title = "Number of behavioral needs", 
-                                tickmode = "array"),
+                                tickmode = "array",
+                                tickmode = "array",
+                                range = c(minx, maxx), 
+                                autorange = F,
+                                autotick = F, 
+                                tick0 = minx, 
+                                dtick = sizex),
                    yaxis = list(title = "People assessed", showgrid = F),
                    annotations = list(
                      list(x = max(s3b_Score_Total), xanchor = "right", 
@@ -1640,7 +1682,70 @@
                          )
                      })
         
-      })  
+      }) 
+      
+      output$ipos_svs <- renderDataTable({
+        
+        withProgress(message = 'Thinking...',
+                     detail = 'of relevant services',
+                     value = 0.1, 
+                     {
+                       tst_need <- needs_matrix
+                       rownames(tst_need) <- tst_need$Code
+                       tst_need <- 
+                         tst_need %>% 
+                         select(-Code) %>% 
+                         t() %>% 
+                         as.data.frame()
+                       
+                       tst_need$item <- rownames(tst_need)
+                       
+                       DT_in <-
+                         s1_3Input() %>%
+                         filter(fake_id == input$id_drop) %>%
+                         filter(as.Date(sis_date) == max(as.Date(sis_date))) %>%
+                         # Identify areas with identified need (>0)
+                         filter(score > 0) %>%
+                         # Include only endorsed or high need items
+                         filter(need_svc == T | import_to == T | import_for == T) %>%
+                         select(item,item_desc,score) %>%
+                         left_join(tst_need, by = "item") %>%
+                         group_by(item) %>%
+                         gather(HCPCS,need_mapped,everything(),-item,-item_desc,-score) %>%
+                         filter(need_mapped == T) %>%
+                         select(-need_mapped) %>%
+                         left_join(codemap, by = "HCPCS") %>%
+                         filter(ServiceType == input$svc_typ) %>%
+                         select(-med_unitcost) %>%
+                         ungroup() %>%
+                         group_by(short_desc,HCPCS) %>%
+                         summarize(related_needs = paste(item_desc, collapse=", "),
+                                   # Concatenate needs
+                                   needs = n(),
+                                   score = sum(score, na.rm = F)) %>%
+                         arrange(desc(needs),desc(score)) 
+                       
+                       DT_in %>%
+                         datatable(
+                           rownames = F,
+                           colnames = c("Service","Code","Related needs from SIS",
+                                        "Needs Addressed","Intensity of Need"),
+                           options = list(pageLength = nrow(DT_in),
+                                          dom = 't')) %>%
+                         formatStyle('needs',
+                                     background = styleColorBar(DT_in$needs, 'gray'),
+                                     backgroundSize = '100% 90%',
+                                     backgroundRepeat = 'no-repeat',
+                                     backgroundPosition = 'center') %>%
+                         formatStyle('score',
+                                     background = styleColorBar(DT_in$score, 'gray'),
+                                     backgroundSize = '100% 90%',
+                                     backgroundRepeat = 'no-repeat',
+                                     backgroundPosition = 'center')
+                     })
+        
+        
+      })
       
       output$need_heat <- renderD3heatmap({
         
@@ -1723,37 +1828,56 @@
           c(TRUE, FALSE)
         } else print(paste0("Error.  Unrecognized input."))
         
-        if ( input$agency == "All" ) {
-          mia <-
-            sisInput() %>%
-            filter(current_int %in% is_current) %>%
-            group_by(interviewer) %>%
-            summarize(unmatch_mcaid = sum(is.na(cmhsp_id)), # cmhsp_id is NA when no match found
-                      miss_start = sum(as.numeric(hour(start) %in% c(0, NA))),
-                      miss_end = sum(as.numeric(hour(end) %in% c(0, NA))),
-                      miss_reason = sum(is.na(ReasonCompleted)),
-                      miss_liv = sum(is.na(LivingSituation)),
-                      miss_setting = sum(is.na(InterviewSetting)),
-                      miss_supports = sum(is.na(sis_sup1_reln_typ_cd)),
-                      miss_respond = sum(is.na(sis_res1_reln_typ_cd)),
-                      not_mich = sum(as.numeric(sis_cl_st != "MI")))
+        agency_filt <- if ( input$agency == "All" ) {
+          levels(unique(scrub_sis$agency))
         } else if ( input$agency %in% levels(unique(scrub_sis$agency)) ) {
-          mia <-
-            sisInput() %>%
-            filter(current_int %in% is_current) %>%
-            filter(agency == input$agency) %>%
-            group_by(interviewer) %>%
-            summarize(unmatch_mcaid = sum(is.na(cmhsp_id)), # cmhsp_id is NA when no match found
-                      miss_start = sum(as.numeric(hour(start) %in% c(0, NA))),
-                      miss_end = sum(as.numeric(hour(end) %in% c(0, NA))),
-                      miss_reason = sum(is.na(ReasonCompleted)),
-                      miss_liv = sum(is.na(LivingSituation)),
-                      miss_setting = sum(is.na(InterviewSetting)),
-                      miss_supports = sum(is.na(sis_sup1_reln_typ_cd)),
-                      miss_respond = sum(is.na(sis_res1_reln_typ_cd)),
-                      not_mich = sum(as.numeric(sis_cl_st != "MI")))
+          input$agency
         } else
           print(paste0("Error.  Unrecognized input."))
+          
+          
+          # Sum number of assessments with no "Important to" fields completed
+          imp_to <-
+            sisInput() %>%
+            filter(current_int %in% is_current) %>%
+            group_by(interviewer,fake_id) %>%
+            select(interviewer,fake_id,ends_with("_to")) %>%
+            gather(field,n,ends_with("_to")) %>%
+            summarize(n_to = sum(n)) %>%
+            ungroup() %>%
+            filter(n_to == 0) %>%
+            group_by(interviewer) %>%
+            summarize(no_to = n())
+          
+          # Sum number of assessments with no "Important to" fields completed
+          imp_for <-
+            sisInput() %>%
+            filter(current_int %in% is_current) %>%
+            group_by(interviewer,fake_id) %>%
+            select(interviewer,fake_id,ends_with("_for")) %>%
+            gather(field,n,ends_with("_for")) %>%
+            summarize(n_for = sum(n)) %>%
+            ungroup() %>%
+            filter(n_for == 0) %>%
+            group_by(interviewer) %>%
+            summarize(no_for = n())
+          
+          mia <-
+            sisInput() %>%
+            filter(current_int %in% is_current) %>%
+            filter(agency %in% agency_filt) %>%
+            group_by(interviewer) %>%
+            summarize(unmatch_mcaid = sum(is.na(cmhsp_id)), # cmhsp_id is NA when no match found
+                      miss_start = sum(as.numeric(hour(start) %in% c(0, NA))),
+                      miss_end = sum(as.numeric(hour(end) %in% c(0, NA))),
+                      miss_reason = sum(is.na(ReasonCompleted)),
+                      miss_liv = sum(is.na(LivingSituation)),
+                      miss_setting = sum(is.na(InterviewSetting)),
+                      miss_supports = sum(is.na(sis_sup1_reln_typ_cd)),
+                      miss_respond = sum(is.na(sis_res1_reln_typ_cd)),
+                      not_mich = sum(as.numeric(sis_cl_st != "MI"))) %>%
+            left_join(imp_to, by = "interviewer") %>%
+            left_join(imp_for, by = "interviewer")
         
         mia %>%
           datatable(rownames = FALSE,
@@ -1762,7 +1886,8 @@
                                  'Missing End Time','Missing Reason',
                                  'No Living Situation','No Intrvw Setting',
                                  'Missing Supports Info','Missing Respondents',
-                                 'State other than MI'),
+                                 'State other than MI',
+                                 'No Important To','No Important For'),
                     caption = 'Data Quality Issues, by Interviewer',
                     extensions = c('Responsive','Buttons'),
                     options = list(pageLength = 5, lengthMenu = c(5, 10,20),
@@ -1810,6 +1935,16 @@
                       backgroundPosition = 'center') %>%
           formatStyle('not_mich',
                       background = styleColorBar(mia$not_mich, 'darkseagreen'),
+                      backgroundSize = '100% 90%',
+                      backgroundRepeat = 'no-repeat',
+                      backgroundPosition = 'center') %>%
+          formatStyle('no_to',
+                      background = styleColorBar(mia$no_to, 'steelblue'),
+                      backgroundSize = '100% 90%',
+                      backgroundRepeat = 'no-repeat',
+                      backgroundPosition = 'center') %>%
+          formatStyle('no_for',
+                      background = styleColorBar(mia$no_for, 'darkseagreen'),
                       backgroundSize = '100% 90%',
                       backgroundRepeat = 'no-repeat',
                       backgroundPosition = 'center')

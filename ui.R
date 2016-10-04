@@ -92,7 +92,8 @@ dashboardPage(
                     "This calculates the number of unique clients interviewed in 
                     the selected date range as a percentage of the total clients 
                     currently meeting criteria for assessment", 
-                    em("(from QI file)"),
+                    em("(from encounter data indicating services were received 
+                       for a developmental disability diagnosis)"),
                     br(),
                     strong("Denominator: % of time elapsed"),
                     "This calculates the number of days between the first and last 
@@ -113,7 +114,8 @@ dashboardPage(
                     "This indicator calculates the number of unique clients 
                     interviewed in the selected date range as a percentage of the 
                     total clients currently meeting criteria for assessment",
-                    em("(from QI file)")),
+                    em("(from encounter data indicating services were received 
+                       for a developmental disability diagnosis)")),
                   p(
                     em("P.S.  This is exactly the same as the numerator of the"), 
                     strong("Completion Rate")
@@ -140,7 +142,9 @@ dashboardPage(
                     strong("Assessments Needed"),
                     "For this we need to get the total number of people needing 
                     assessments.  For this we take the number of total clients 
-                    meeting criteria for assessment", em("(from QI file)"), 
+                    meeting criteria for assessment", 
+                    em("(from encounter data indicating services were received 
+                       for a developmental disability diagnosis)"), 
                       "and subtract the number of people who have had assessments 
                     prior to the initial date in the date range selected.  We then 
                     divide the number of people needing assessments by the number 
@@ -334,12 +338,26 @@ dashboardPage(
                 width = NULL,
                 tabPanel(
                   "Distribution",
-                  radioButtons(
-                    "central",
-                    label = "Display:",
-                    choices = c("Mean", "Median"), 
-                    selected = "Mean",
-                    inline = T
+                  box(
+                    title = "Chart settings", 
+                    color = "black",
+                    collapsible = TRUE,
+                    collapsed = T,
+                    width = NULL,
+                    radioButtons(
+                      "central",
+                      label = "Display:",
+                      choices = c("Mean", "Median"), 
+                      selected = "Mean",
+                      inline = T
+                    ),
+                    sliderInput(
+                      "sni_bins", 
+                      "Number of bins:", 
+                      min = 1, 
+                      max = 30, 
+                      value = 10
+                    )
                   ),
                   plotlyOutput("hist_sni")
                 ),
@@ -820,12 +838,26 @@ dashboardPage(
                 width = NULL,
                 tabPanel(
                   "Distribution",
-                  radioButtons(
-                    "radio_mbhist",
-                    label = "Display:",
-                    choices = c("Medical", "Behavioral"), 
-                    selected = "Medical",
-                    inline = T
+                  box(
+                    title = "Chart settings", 
+                    color = "black",
+                    collapsible = TRUE,
+                    collapsed = T,
+                    width = NULL,
+                    radioButtons(
+                      "radio_mbhist",
+                      label = "Display:",
+                      choices = c("Medical", "Behavioral"), 
+                      selected = "Medical",
+                      inline = T
+                    ),
+                    sliderInput(
+                      "mb_bins", 
+                      "Number of bins:", 
+                      min = 1, 
+                      max = 30, 
+                      value = 10
+                    )
                   ),
                   plotlyOutput("hist_mb")
                 ),
@@ -1202,6 +1234,21 @@ dashboardPage(
                   )
                 ),
                 tabPanel(
+                  "Relevant Services",
+                  p(
+                    "Based on the needs identified in the SIS assessment, 
+                    the following services may be relevant in helping to address 
+                    identified needs:"
+                  ),
+                  selectInput(
+                    "svc_typ",
+                    "Service Type",
+                    levels(codemap$ServiceType),
+                    selected = "Care Coordination"
+                  ),
+                  dataTableOutput("ipos_svs")
+                ),
+                tabPanel(
                   "Potential Referrals",
                   p(
                     "Based on the needs identified in the SIS assessment, 
@@ -1315,7 +1362,7 @@ dashboardPage(
           column(
             width = 12,
             box(
-              title = "Population Needs", 
+              title = "Patterns of Need", 
               status = "warning",
               collapsible = TRUE, 
               collapsed = TRUE,
@@ -1548,6 +1595,16 @@ dashboardPage(
                     assessed.  This is one of a number of issues with data entry 
                     that may make it difficult to correctly map proximity to 
                     nearby resources."
+                  ),
+                  p(
+                    strong("No Important To"),
+                    "counts the number of assessments where no items were marked 
+                    as ", em("important to"), " the person being assessed."
+                  ),
+                  p(
+                    strong("No Important For"),
+                    "counts the number of assessments where no items were marked 
+                    as ", em("important for"), " the person being assessed."
                   )
                 )
               )

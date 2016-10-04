@@ -37,6 +37,9 @@
   
 # Load service mapping table (created by "prep/sis_mappings.R" script)
   needs_matrix <- read.csv("data/needs_matrix.csv")
+  
+# Load HCPCS table (created by "prep/readServices.R" script)
+  codemap <- read.csv("data/codemap.csv")
     
 ################################################################################ 
 # DEFINE FUNCTION: svs2sis (Service codes to SIS needs)
