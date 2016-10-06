@@ -32,7 +32,7 @@ open404 %>%
             q1_unitcost = quantile(CostPerUnit, .25, na.rm = T),
             mad_unitcost = mad(CostPerUnit, na.rm = T )) %>%
   mutate(avg_unitcost = round(cost / units, digits =2)) %>%
-  select(HCPCS, unit_hrs, avg_unitcost, med_unitcost, 
+  select(HCPCS, ServiceType, Service, unit_hrs, avg_unitcost, med_unitcost, 
          q1_unitcost, mad_unitcost)
 
 # Join RVU and 404 unit values to "codemap" table
