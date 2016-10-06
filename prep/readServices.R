@@ -41,7 +41,7 @@ codemap <-
   left_join(hcpcs, by = "HCPCS")  %>%
   # Only distinct codes to avoid duplication of svs on join
   distinct(HCPCS, .keep_all = TRUE) %>%
-  select(HCPCS,short_desc,long_desc,unit_hrs,avg_unitcost,med_unitcost)
+  select(HCPCS,short_desc,long_desc,ServiceType,Service,unit_hrs,avg_unitcost,med_unitcost)
 
 write.csv(codemap, "data/codemap.csv")
 
