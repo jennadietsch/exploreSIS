@@ -1046,7 +1046,7 @@ dashboardPage(
           column(
             width = 12,
             box(
-              title = "Individual Recommendations",
+              title = "Individual Recommendations (In development)",
               status = "warning",
               collapsible = TRUE, 
               collapsed = TRUE,
@@ -1502,6 +1502,106 @@ dashboardPage(
                         need within the entire I/DD population served."
                       )
                     )
+                  )
+                )
+              )
+            )
+          ),
+          column(
+            width = 12,
+            box(
+              title = "Related Services (In development)", 
+              status = "warning",
+              collapsible = TRUE, 
+              collapsed = TRUE,
+              width = NULL,
+              tabBox(
+                width = NULL,
+                tabPanel(
+                  "Network Map",
+                  visNetworkOutput('sis_svc_ntwk')
+                ),
+                tabPanel(
+                  "About",
+                  p(
+                    "While assessment data such as the information from the 
+                    SIS can be helpful in painting a picture of the needs 
+                    that exist, people want to meet those needs with services 
+                    and practical solutions.  Questions like the following 
+                    continue to arise:",  
+                    em("How can we offer services which best address a person's 
+                       needs?  How can we provide people with relevant service 
+                       choices to supplement their natural supports and 
+                       relationships in the community?"),  
+                    "In order to even begin to answer these questions at a 
+                    population level, it is important to understand which 
+                    services may be relevant to meeting specific needs.  
+                    That's where this chart comes in.  It's a complex picture 
+                    to explore a complex set of questions..."
+                  ),
+                  strong("The network map:"),
+                  p(
+                    "Network maps show relationships between multiple pairs of items (", 
+                    em("called 'nodes' on the map, and represented by circles"),
+                    ").  A relationship between any two nodes is shown by a line 
+                    drawn between those nodes.  In this map, a personal need 
+                    identified by an item on the SIS (", em("blue node"),
+                    ") is shown as being related to any service (",
+                    em("yellow node"),") that could potentially address that need."
+                  ),
+                  p(
+                    "The nodes are organized based on their connection to each 
+                    other, which means needs that are not related to the same 
+                    services will not appear near one another.  This doesn't 
+                    mean that these needs (", 
+                    em("e.g. physical fitness and emotional well-being"), 
+                    ") aren't connected within an individual person's life, 
+                    just that they are not addressed using the same services."
+                  ),
+                  p(
+                    "On the network map here, the thickness of the line 
+                    connecting a need to a service corresponds to the number 
+                    of people who had this need identified on the SIS (",
+                    em("i.e. received a score of greater than zero"),
+                    ").  The size of a node indicates the number of other nodes 
+                    it is connected to.  You can hover over a line to see the 
+                    number of people that it represents and the average score 
+                    on that item.  You can also click on individual nodes to 
+                    highlight their relationships, and zoom in or out to inspect 
+                    details."
+                  ),
+                  strong("A few words about service mappings:"),
+                  p(
+                    "The mappings connect each SIS need (",
+                    em("i.e. item from SIS sections 1-3"),
+                    ") to each HCPCS code that might be used to address that 
+                    need, either in full or in part.  Service codes are included 
+                    if they were provided within the state according to the most 
+                    recent Section 404 report.  A link does not imply 
+                    eligibility for a given service, but merely indicates that 
+                    the service might be relevant to help meet needs of this 
+                    type when they do meet eligibility criteria.  In instances 
+                    where the need was not related to a specific service but may 
+                    require coordination by a supports coordinator (",
+                    em("e.g. obtaining legal services"),
+                    "), case management codes were mapped as potentially 
+                    relevant."
+                  ),
+                  p(
+                    "These mappings are not intended to confine a person's 
+                    service options in any way, but to highlight services that 
+                    are personalized based on individual needs, for 
+                    consideration in person-centered planning."
+                  ),
+                  p(
+                    "Because each need is mapped to all services that could 
+                    possibly address it, the number of people with needs 
+                    related to a given services is greater than the number 
+                    who will use that service, since people are unlikely to 
+                    use all services connected to the need, but will instead 
+                    select from among these options.  It is also worth noting 
+                    that the services shown here may not be available within 
+                    every community."
                   )
                 )
               )

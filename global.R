@@ -8,6 +8,7 @@
   library(rcdimple)
   library(dygraphs)
   library(parsetR)
+  library(visNetwork)
   library(d3heatmap)
   library(dplyr)
   library(magrittr)

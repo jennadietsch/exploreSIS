@@ -1684,6 +1684,98 @@
         
       }) 
       
+      output$sis_svc_ntwk <- renderVisNetwork({
+        
+        tst_need <- needs_matrix
+        rownames(tst_need) <- tst_need$Code
+        tst_need <- 
+          tst_need %>% 
+          select(-Code) %>% 
+          t() %>% 
+          as.data.frame()
+        
+        tst_need$item <- rownames(tst_need)
+        
+        sis2svc_network <-
+          s1_3Input() %>%
+          # filter(as.Date(sis_date) == max(as.Date(sis_date))) %>%
+          # Identify areas with identified need (>0)
+          filter(score > 0) %>%
+          # Include only endorsed or high need items
+          filter(need_svc == T | import_to == T | import_for == T) %>%
+          select(item,item_desc,score) %>%
+          left_join(tst_need, by = "item") %>%
+          group_by(item) %>%
+          gather(HCPCS,need_mapped,everything(),-item,-item_desc,-score) %>%
+          filter(need_mapped == T) %>%
+          left_join(codemap, by = "HCPCS") %>%
+          select(from = item_desc,
+                 to = short_desc,
+                 score) %>%
+          group_by(from,to) %>%
+          summarize(avg_score = mean(score),
+                    n = n())
+        
+        nodes <-
+          unique(c(unique(as.character(sis2svc_network$from)),
+                   unique(as.character(sis2svc_network$to)))) %>%
+          data.frame("name_id" = .) %>%
+          # Alphabetize
+          arrange(name_id) %>%
+          # Assign ids starting at 0
+          mutate(id = row_number(name_id)-1,
+                 group = ifelse(name_id %in% sis2svc_network$from,
+                                yes = "Needs", no = "Services"))
+        
+        edges <-
+          sis2svc_network %>%
+          ungroup() %>%
+          left_join(nodes, by = c("from" = "name_id")) %>%
+          select(-from) %>%
+          rename(from = id) %>%
+          left_join(nodes, by = c("to" = "name_id")) %>%
+          select(-to) %>%
+          rename(to = id,
+                 value = n) %>%
+          mutate(title = paste0(value," people have this need.  ",
+                                "<br>The average score is ", 
+                                round(avg_score, digits = 1))) %>%
+        droplevels()
+        
+        # Calculate degree of node to use as size
+        # Degree = number of edges attached to a given node
+        deg_from <-
+          edges %>%
+          ungroup() %>%
+          group_by(from) %>%
+          summarize(degree = n_distinct(to)) %>%
+          select(id = from, degree)
+        
+        deg <-
+          edges %>%
+          ungroup() %>%
+          group_by(to) %>%
+          summarize(degree = n_distinct(from)) %>%
+          select(id = to, degree) %>%
+          rbind(deg_from) %>%
+          ungroup()
+        
+        nodes %<>% 
+          left_join(deg, by = "id") %>%
+          rename(value = degree,
+                 label = name_id)
+        
+        #nodes <- nodes() %>% rename(label = name)
+        
+        visNetwork(nodes, edges, height = "700px", width = "100%") %>% 
+          visOptions(highlightNearest = list(enabled = T, degree = 1, hover = F)) %>%
+          visEdges(color = list(color = "#E0EEEE", highlight = "#E1AF00")) %>%
+          visPhysics(stabilization = FALSE) %>%
+          visLayout(randomSeed = 123) %>%
+          visLegend(width = 0.1, position = "right")
+        
+      })
+      
       output$ipos_svs <- renderDataTable({
         
         withProgress(message = 'Thinking...',
