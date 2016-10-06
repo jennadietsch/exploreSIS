@@ -23,7 +23,7 @@ filt404 <-
 open404 %>%
   filter(FY == max(FY)) %>% # Keep most recent year
   rename(HCPCS = Code) %>%
-  group_by(HCPCS) %>%
+  group_by(HCPCS, ServiceType, Service) %>%
   # Summarize cost by HCPCS code (without modifiers)
   summarize(cost = sum(SumOfCost, na.rm = T),
             units = sum(SumOfUnits, na.rm = T),
