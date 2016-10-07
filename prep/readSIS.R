@@ -1,7 +1,6 @@
 ## readSIS.R ##
 
-  library(dplyr)
-  library(car)
+  library(dplyr); library(car); library(magrittr); library(tidyr)
 
 # What does the data look like?
   ncol(sis_full)
