@@ -338,6 +338,8 @@ dashboardPage(
                 width = NULL,
                 tabPanel(
                   "Distribution",
+                  plotlyOutput("hist_sni"),
+                  br(),
                   box(
                     title = "Chart settings", 
                     color = "black",
@@ -358,8 +360,7 @@ dashboardPage(
                       max = 30, 
                       value = 10
                     )
-                  ),
-                  plotlyOutput("hist_sni")
+                  )
                 ),
                 tabPanel(
                   "Normal?",
@@ -436,7 +437,7 @@ dashboardPage(
                       ),
                       p(
                         "A density plot (which is what the lines are called) can 
-                        be tricky to explain.  You can think of it as a smoothed 
+                        be tricky to understand  You can think of it as a smoothed 
                         out histogram.  The y-axis measurement ", em("Density"),
                         " is also different.  It boils down to this: the area 
                         under the entire curve is 1, and the probability of a 
@@ -838,6 +839,8 @@ dashboardPage(
                 width = NULL,
                 tabPanel(
                   "Distribution",
+                  plotlyOutput("hist_mb"),
+                  br(),
                   box(
                     title = "Chart settings", 
                     color = "black",
@@ -858,8 +861,7 @@ dashboardPage(
                       max = 30, 
                       value = 10
                     )
-                  ),
-                  plotlyOutput("hist_mb")
+                  )
                 ),
                 tabPanel(
                   "About",

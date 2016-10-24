@@ -11,6 +11,7 @@
   library(visNetwork)
   library(d3heatmap)
   library(dplyr)
+  library(forcats)
   library(magrittr)
   library(tidyr)
   library(googlesheets)

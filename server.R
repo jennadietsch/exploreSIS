@@ -662,7 +662,8 @@
             group_by(item) %>%
             summarize(n = n()) %>%
             ungroup() %>%
-            arrange(desc(n))
+            # Reorder factor by value for barchart ordering
+            mutate(item = fct_reorder(item, x = n, fun = sum, .desc = T))
         } else if ( input$agency %in% levels(unique(scrub_sis$agency)) ) {
           plans <-
             sisInput() %>%
@@ -674,12 +675,14 @@
             group_by(item) %>%
             summarize(n = n()) %>%
             ungroup() %>%
-            arrange(desc(n))
+            # Reorder factor by value for barchart ordering
+            mutate(item = fct_reorder(item, x = n, fun = sum, .desc = T))
         } else
           print(paste0("Error.  Unrecognized input."))
         
         plans %>%
-          plot_ly(x = item, y = n, type = "bar", color = item, colors = "Set3") %>%
+          plot_ly(x = ~item, y = ~n) %>%
+          add_bars(color = ~item, colors = "Set3") %>%
           layout(xaxis = list(title = "Type of Need", showticklabels = F),
                  yaxis = list(title = "# times included in planning"),
                  legend = list(xanchor = "right", yanchor = "top", x = 1, y = 1, 
@@ -710,14 +713,17 @@
                                        & type == "None", 
                                        yes = TRUE, no = FALSE)) %>%
             filter(no_concern == F) %>%
-            group_by(item_desc,type ) %>% # type importance
+            group_by(item_desc,type) %>% # type importance
             summarize(n = n_distinct(fake_id),
                       avg = round(mean(score, na.rm = T), digits = 1)) %>%
             ungroup() %>% droplevels() %>%
-            arrange(desc(n)) %>%
-            plot_ly(x = item_desc, y = n, type = "bar", color = type, 
-                    colors = c("#FF0000", "#00A08A", "#F2AD00", 
-                               "#F98400", "#5BBCD6")) %>%
+            # Reorder factor by value for barchart ordering
+            mutate(item_desc = fct_reorder(item_desc, x = n, 
+                                           fun = sum, .desc = T)) %>%
+            plot_ly(x = ~item_desc, y = ~n) %>%
+            add_bars(color = ~type, 
+                     colors = c("#FF0000", "#00A08A", "#F2AD00", 
+                                "#F98400", "#5BBCD6")) %>%
             layout(xaxis = list(title = "Life Domain", showticklabels = F),
                    yaxis = list(title = "People with Need"),
                    legend = list(xanchor = "right", yanchor = "top", x = 1, y = 1, 
@@ -733,8 +739,10 @@
             summarize(n = n_distinct(fake_id),
                       avg = round(mean(score, na.rm = T), digits = 1)) %>%
             ungroup() %>% droplevels() %>%
-            arrange(desc(avg)) %>%
-            plot_ly(x = item_desc, y = avg, type = "bar",  
+            # Reorder factor by value for barchart ordering
+            mutate(item_desc = fct_reorder(item_desc, x = avg, 
+                                           fun = sum, .desc = T)) %>%
+            plot_ly(x = ~item_desc, y = ~avg, type = "bar",  
                     colors = c("#FF0000", "#00A08A", "#F2AD00", 
                                "#F98400", "#5BBCD6")) %>%
             layout(xaxis = list(title = "Life Domain", showticklabels = F),
@@ -756,15 +764,17 @@
         } else
           print(paste0("Error.  Unrecognized input."))
         
-        filt_inpt %>%
+        filt_inpt %<>%
           group_by(item_desc) %>%
           summarize(To = sum(as.numeric(import_to), na.rm = T),
                     For = sum(as.numeric(import_for), na.rm = T)) %>%
           gather(important, n, To:For) %>%
           ungroup() %>%
-          arrange(desc(n)) %>%
-          plot_ly(x = item_desc, y = n, type = "bar", color = important, 
-                  colors = c('#b2df8a', '#1f78b4')) %>%
+          # Reorder factor by value for barchart ordering
+          mutate(item_desc = fct_reorder(item_desc, x = n, 
+                                         fun = sum, .desc = T)) %>%
+          plot_ly(x = ~item_desc, y = ~n) %>%
+          add_bars(color = ~important, colors = c('#b2df8a', '#1f78b4')) %>%
           layout(xaxis = list(title = "Life Domain", showticklabels = F),
                  yaxis = list(title = "People with need marked as important"),
                  legend = list(xanchor = "right", yanchor = "top", x = 1, y = 1, 
@@ -1036,47 +1046,42 @@
           
         hist <-
         scrub_sis_filt %>%
-          plot_ly(x = SupportNeedsIndex,
-                  opacity = 0.6, 
-                  autobinx = F,
-                  type = "histogram",
-                  xbins = list(start = minx, 
-                               end = maxx, 
-                               size = sizex),
-                  hoverinfo = "all", 
-                  name = "people",
-                  showlegend = F,
-                  mode = "markers") %>%
+          plot_ly(x = ~SupportNeedsIndex) %>%
+          add_histogram(opacity = 0.6, 
+                        autobinx = F,
+                        xbins = list(start = minx, 
+                                     end = maxx, 
+                                     size = sizex),
+                        hoverinfo = "all", 
+                        name = "people",
+                        showlegend = F) %>%
           layout(xaxis = list(title = "Support Needs Index Score", 
                               tickmode = "array",range = c(minx, maxx), autorange = F,
                               autotick = F, tick0 = minx, dtick = sizex),
                  yaxis = list(title = "People assessed", showgrid = F),
                  legend = list(xanchor = "right", yanchor = "top", x = 1, y = 1, 
                                font = list(size = 10)),
-                 annotations = list(
-                   list(x = min(SupportNeedsIndex), xanchor = "left", 
-                        y = 1, yanchor = "top", yref = "paper",
-                        showarrow = F, align = "left",
-                        text = notetxt))) 
+                 annotations = list(x = minx, xanchor = "left", 
+                                    y = 1, yanchor = "top", yref = "paper",
+                                    showarrow = F, align = "left",
+                                    text = notetxt)) 
         
-        max_hist <- max(hist(hist$SupportNeedsIndex,
+        max_hist <- max(hist(scrub_sis_filt$SupportNeedsIndex,
                              breaks=input$sni_bins)$counts,na.rm=TRUE)
         
         ifelse(
           input$central == "Mean",
-          yes = hist <- hist %>% add_trace(x = rep(mean(SupportNeedsIndex), 
+          yes = hist <- hist %>% add_lines(x = rep(mean(scrub_sis_filt$SupportNeedsIndex), 
                                                    each = 2), 
                                            y = c(0,max_hist),
-                                           type = "line",
                                            line = list(dash = 5),
                                            marker = list(color = "#DA824F"),
                                            name = "Mean score",
                                            hoverinfo = "x",
                                            xaxis = "x"),
-          no  = hist <- hist %>% add_trace(x = rep(median(SupportNeedsIndex), 
+          no  = hist <- hist %>% add_lines(x = rep(median(scrub_sis_filt$SupportNeedsIndex), 
                                                    each = 2), 
                                            y = c(0,max_hist),
-                                           type = "line",
                                            line = list(dash = 5),
                                            marker = list(color = "#DA824F"),
                                            name = "Median score",
@@ -1097,18 +1102,39 @@
         } else
           print(paste0("Error.  Unrecognized input."))
         
-        p <- 
-          qplot(scrub_sis_filt$SupportNeedsIndex, geom = 'blank') +
-          geom_histogram(aes(y = ..density..), alpha = 0.5) +
-          geom_line(aes(y = ..density.., colour = 'Actual Scores'), stat = 'density') +
-          stat_function(fun = "dnorm", args = c(100, 15), aes(colour = 'Standard Scores'))  +
-          scale_colour_manual(name = '', values = c('#00A08A', '#F98400')) + 
-          theme(legend.position = 'top', legend.direction = 'horizontal') +
-          theme_bw() + 
-          scale_x_continuous(name = "Support Needs Index") +
-          scale_y_continuous(name = "Density") 
+        # Calculate actual density
+        dense <- density(scrub_sis_filt$SupportNeedsIndex, 
+                         kernel = "gaussian", 
+                         na.rm = T)
         
-        ggplotly(p)
+        # Density of normal distribution
+        norm <- density(rnorm(n = nrow(scrub_sis_filt), mean = 100, sd = 15),
+                        kernel = "gaussian", 
+                        na.rm = T)
+        
+        scrub_sis_filt %>%
+          plot_ly(x = ~SupportNeedsIndex) %>%
+          add_histogram(opacity = 0.6,
+                        colors = "#A9A9A9",
+                        hoverinfo = "all", 
+                        name = "People",
+                        yaxis = "y1") %>%
+          add_lines(x = dense$x,
+                    y = dense$y,
+                    name = "Actual Scores",
+                    yaxis = "y2") %>%
+          add_lines(x = norm$x,
+                    y = norm$y,
+                    name = "Standard Scores",
+                    yaxis = "y2") %>%
+          layout(title = "Actual v. Normal Distribution", 
+                 yaxis1 = list(title = "People",
+                               rangemode = "tozero"),
+                 yaxis2 = list(overlaying = "y", 
+                               side = "right", 
+                               title = "Density",
+                               rangemode = "tozero"),
+                 xaxis = list(title = "Support Needs Index"))
         
       })
         
@@ -1236,7 +1262,9 @@
             group_by(item_desc,level) %>%
             summarize(n = n()) %>%
             ungroup() %>%
-            arrange(desc(n))
+            # Reorder factor by value for barchart ordering
+            mutate(item_desc = fct_reorder(item_desc, x = n, 
+                                           fun = sum, .desc = T))
         } else if ( input$agency %in% levels(unique(scrub_sis$agency)) ) {
           conditions <-
             sec3Input() %>%
@@ -1247,13 +1275,15 @@
             group_by(item_desc,level) %>%
             summarize(n = n()) %>%
             ungroup() %>%
-            arrange(desc(n))
+            # Reorder factor by value for barchart ordering
+            mutate(item_desc = fct_reorder(item_desc, x = n, 
+                                           fun = sum, .desc = T))
         } else
           print(paste0("Error.  Unrecognized input."))
         
         conditions %>%
-          plot_ly(x = item_desc, y = n, type = "bar", color = level, 
-                  colors = c("#F98400","#FF0000")) %>%
+          plot_ly(x = ~item_desc, y = ~n) %>%
+          add_bars(color = ~level, colors = c("#F98400","#FF0000")) %>%
           layout(xaxis = list(title = "Type of Need", showticklabels = F),
                  yaxis = list(title = "People with need"),
                  legend = list(xanchor = "right", yanchor = "top", x = 1, y = 1, 
@@ -1288,17 +1318,15 @@
           
           hist <-
             scrub_sis_filt %>%
-            plot_ly(x = s3a_Score_Total,
-                    opacity = 0.6, 
-                    autobinx = F,
-                    type = "histogram",
-                    xbins = list(start = minx, 
-                                 end = maxx, 
-                                 size = sizex),
-                    hoverinfo = "all",  
-                    name = "people",
-                    showlegend = F,
-                    mode = "markers") %>%
+            plot_ly(x = ~s3a_Score_Total) %>%
+            add_histogram(opacity = 0.6, 
+                          autobinx = F,
+                          xbins = list(start = minx, 
+                                       end = maxx, 
+                                       size = sizex),
+                          hoverinfo = "all",  
+                          name = "people",
+                          showlegend = F) %>%
             layout(xaxis = list(title = "Number of medical needs", 
                                 tickmode = "array",
                                 range = c(minx, maxx), 
@@ -1306,17 +1334,15 @@
                                 autotick = F, 
                                 tick0 = minx, dtick = sizex),
                    yaxis = list(title = "People assessed", showgrid = F),
-                   annotations = list(
-                     list(x = max(s3a_Score_Total), xanchor = "right", 
-                          y = 1, yanchor = "top", yref = "paper",
-                          showarrow = F, align = "left",
-                          text = notetxt))) %>% 
-            add_trace(x = rep(mean(s3a_Score_Total), 
+                   annotations = list(x = maxx, xanchor = "right", 
+                                      y = 1, yanchor = "top", yref = "paper",
+                                      showarrow = F, align = "left",
+                                      text = notetxt)) %>% 
+            add_lines(x = rep(mean(scrub_sis_filt$s3a_Score_Total), 
                               each = 2), 
                       y = c(0,max_hist),
-                      type = "line",
                       line = list(dash = 5),
-                      marker = list(color = "#DA824F"),
+                      #marker = list(color = "#DA824F"),
                       name = "Mean",
                       hoverinfo = "x",
                       xaxis = "x")
@@ -1335,19 +1361,16 @@
           
           hist <-
             scrub_sis_filt %>%
-            plot_ly(x = s3b_Score_Total,
-                    opacity = 0.6, 
-                    autobinx = F,
-                    type = "histogram",
-                    xbins = list(start = minx, 
-                                 end = maxx, 
-                                 size = sizex),
-                    hoverinfo = "all",  
-                    name = "people",
-                    showlegend = F,
-                    mode = "markers") %>%
+            plot_ly(x = ~s3b_Score_Total) %>%
+            add_histogram(opacity = 0.6, 
+                          autobinx = F,
+                          xbins = list(start = minx, 
+                                       end = maxx, 
+                                       size = sizex),
+                          hoverinfo = "all",  
+                          name = "people",
+                          showlegend = F) %>%
             layout(xaxis = list(title = "Number of behavioral needs", 
-                                tickmode = "array",
                                 tickmode = "array",
                                 range = c(minx, maxx), 
                                 autorange = F,
@@ -1355,17 +1378,15 @@
                                 tick0 = minx, 
                                 dtick = sizex),
                    yaxis = list(title = "People assessed", showgrid = F),
-                   annotations = list(
-                     list(x = max(s3b_Score_Total), xanchor = "right", 
-                          y = 1, yanchor = "top", yref = "paper",
-                          showarrow = F, align = "left",
-                          text = notetxt))) %>% 
-            add_trace(x = rep(mean(s3b_Score_Total), 
+                   annotations = list(x = max(s3b_Score_Total), xanchor = "right", 
+                                      y = 1, yanchor = "top", yref = "paper",
+                                      showarrow = F, align = "left",
+                                      text = notetxt)) %>% 
+            add_lines(x = rep(mean(scrub_sis_filt$s3b_Score_Total), 
                               each = 2), 
                       y = c(0,max_hist),
-                      type = "line",
                       line = list(dash = 5),
-                      marker = list(color = "#DA824F"),
+                      #marker = list(color = "#DA824F"),
                       name = "Mean",
                       hoverinfo = "x",
                       xaxis = "x")
@@ -1397,7 +1418,7 @@
         boxInput() %>%
           left_join(int_df, by = c("interviewer" = "int_nm")) %>%
           filter(subscale == input$box) %>%
-          plot_ly(x = score, color = int_id, type = "box") %>%
+          plot_ly(x = ~score, color = ~int_id, type = "box") %>%
           plotly::layout(yaxis = list(title = "Interviewers",
                                       showticklabels = F))
           
