@@ -14,7 +14,8 @@
   sis <- 
     sis_full %>% 
     # Filter Status == Completed
-    filter(statusText %in% c("COMPLETED")) %>% 
+    filter(statusText %in% c("COMPLETED")
+           & deleted == "False") %>% 
     # Remove text fields
     select(-ends_with("notes")) %>% 
     # Format datetime fields
@@ -44,58 +45,84 @@
       age = floor((as.POSIXct(sis_completed_dt) - sis_cl_dob_dt)/365.242),
       # Create week and annual dates for grouping
       sis_wk = week(sis_completed_dt),
-      sis_yr = year(sub_sis$sis_date),
-      sis_yrwk = floor_date(sub_sis$sis_date, unit = "week")
+      sis_yr = year(sis_completed_dt),
+      sis_yrwk = floor_date(sis_completed_dt, unit = "week")
     ) %>%
     # Clean Medicaid ID field
-    mutate(mcaid_id = sis_track_num, # map correct field
-           # Trim lead / trail whitespace
-           mcaid_id = str_trim(mcaid_id),
-           # Remove alpha and special chars
-           mcaid_id = str_replace_all(mcaid_id, "[[:alpha:]]", ""),
-           mcaid_id = str_replace_all(mcaid_id, "[[:punct:]]", ""),
-           # Convert blanks to NA
-           mcaid_id = ifelse(mcaid_id == "", yes = NA, no = mcaid_id), 
-           # If string > 10 chars, include only last 10 chars
-           mcaid_id = ifelse(nchar(as.character(mcaid_id)) > 10,
-                             yes = substr(mcaid_id, 
-                                          start = nchar(as.character(mcaid_id)) - 9, 
-                                          stop = nchar(as.character(mcaid_id))
-                             ),
-                             no = mcaid_id),
-           # If string < 10 chars, pad with leading zeroes
-           mcaid_id = ifelse(nchar(as.character(mcaid_id)) < 10,
-                             yes = sprintf("%010d", as.integer(mcaid_id)),
-                             no = mcaid_id),
-           # Make 'NA' & 0000000000 to NA
-           mcaid_id = ifelse(mcaid_id %in% c("        NA","NA","0000000000"), 
-                             yes = NA,
-                             no = mcaid_id),
-           # Convert to factor
-           mcaid_id = as.factor(mcaid_id)) %>%
-    rename(interviewer_orig = assignedLoginId,
-           interviewer = lastModifiedByLoginId,
-           agency = sis_int_agency_nm,
-           gender = sis_cl_sex_cd,
-           sis_date = sis_completed_dt,
-           )
+    mutate(
+      mcaid_id = sis_track_num, # map correct field
+      # Trim lead / trail whitespace
+      mcaid_id = str_trim(mcaid_id),
+      # Remove alpha and special chars
+      mcaid_id = str_replace_all(mcaid_id, "[[:alpha:]]", ""),
+      mcaid_id = str_replace_all(mcaid_id, "[[:punct:]]", ""),
+      # Convert blanks to NA
+      mcaid_id = ifelse(mcaid_id == "", yes = NA, no = mcaid_id), 
+      # If string > 10 chars, include only last 10 chars
+      mcaid_id = ifelse(nchar(as.character(mcaid_id)) > 10,
+                        yes = substr(mcaid_id, 
+                                     start = nchar(as.character(mcaid_id)) - 9, 
+                                     stop = nchar(as.character(mcaid_id))),
+                        no = mcaid_id),
+      # If string < 10 chars, pad with leading zeroes
+      mcaid_id = ifelse(nchar(as.character(mcaid_id)) < 10,
+                        yes = sprintf("%010d", as.integer(mcaid_id)),
+                        no = mcaid_id),
+      # Make 'NA' & 0000000000 to NA
+      mcaid_id = ifelse(mcaid_id %in% c("        NA","NA","0000000000"), 
+                        yes = NA,
+                        no = mcaid_id),
+      # Convert to factor
+      mcaid_id = as.factor(mcaid_id)
+    ) %>%
+    rename(
+      sis_id = `ï..formResultId`,
+      interviewer_orig = assignedLoginId,
+      interviewer = lastModifiedByLoginId,
+      agency = groupName,
+      PIHP = enterpriseName,
+      gender = sis_cl_sex_cd,
+      race = sis_race,
+      ethnic = sis_ethnic,
+      sis_date = sis_completed_dt
+    )
   
   tst <-
   sis %>%
-    
+    select(# Identifiers 
+           sis_id, mcaid_id,
+           # Assessment info
+           interviewer, interviewer_orig, agency, PIHP, sis_why,
+           contains("reln"),
+           # Assessment date fields
+           sis_date, sis_wk, sis_yr, sis_yrwk, 
+           DaysSince, start, end, duration,
+           dateUpdated, statusChangeDate, 
+           # Demographics
+           age, gender, race, ethnic,
+           sis_cl_addr_line1, sis_cl_st, sis_cl_zip,
+           # Assessment items
+           Q1A1_ExMedSupport:Q1A21_Other,
+           Q1B1_ExBehSupport:Q1B15_Other,
+           Q2A1_TOS:Q2F8_ImportantFor,
+           Q3A1_TOS:Q3A8_ImportantFor,
+           Q4A1v1:sis_s44n,
+           # Disability status
+           contains("disab"),
+           # Employment status
+           contains("employ"),
+           # Planning items
+           starts_with("planning")
+           )
     
 # Create subset of summary variables
   sub_sis <-
   sis %>%
     select(sis_id, 
            mcaid_id,
-           
-           
            sis_cl_st,
-           
            ReasonCompleted, InterviewSetting,
            IndividualParticipation,
-            
            LivingSituation,
            sis_sup1_reln_typ_cd, sis_res1_reln_typ_cd,
            homeliving_std = s1a_Score_Standard,
@@ -135,9 +162,6 @@
            s3a_1_support:s3b_Score_Total)
 
 
- #sub_sis$sis_yrwk <- sprintf("%04d-%02d", sub_sis$sis_yr, sub_sis$sis_wk)
-  
-  
 # Make Living Situation Groupings
 
   # First, we've got to remove the "â€“" characters
