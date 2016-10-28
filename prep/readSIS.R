@@ -76,8 +76,14 @@
       mcaid_id = as.factor(mcaid_id)
     ) %>%
     mutate(
+      # Clean interviewer names to require less manual mapping
+      interviewer_orig = str_trim(tolower(assignedLoginId)),
+      interviewer = str_trim(tolower(lastModifiedByLoginId))
+    ) %>%
+    mutate(
       # Combine address fields for geomapping
-      address = paste0(sis_cl_addr_line1, ", ", sis_cl_st, ", ", sis_cl_zip)
+      address = paste0(sis_cl_addr_line1, ", ", sis_cl_city, ", ", 
+                       sis_cl_st, ", ", sis_cl_zip)
     ) %>%
     # mutate(
     #   # Make Living Situation Groupings
@@ -106,15 +112,12 @@
     # ) %>%
     rename(
       sis_id = `ï..formResultId`,
-      interviewer_orig = assignedLoginId,
-      interviewer = lastModifiedByLoginId,
       agency = groupName,
       PIHP = enterpriseName,
       gender = sis_cl_sex_cd,
       race = sis_race,
       ethnic = sis_ethnic,
-      sis_date = sis_completed_dt,
-      state = sis_cl_st
+      sis_date = sis_completed_dt
     )
   
 # Make subset for analysis
@@ -130,7 +133,7 @@
       sis_date, sis_wk, sis_yr, sis_yrwk, DaysSince, start, end, duration,
       dateUpdated, statusChangeDate, 
       # Demographics
-      age, gender, race, ethnic, address, state, # LivingSituation, LivingType,
+      age, gender, race, ethnic, address, sis_cl_st, # LivingSituation, LivingType,
       # Assessment items
       Q1A1_ExMedSupport:Q1A21_Other,
       Q1B1_ExBehSupport:Q1B15_Other,
