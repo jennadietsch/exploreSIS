@@ -1,6 +1,6 @@
 ## read_attribution.R ##
 
-library(dplyr)
+library(dplyr); library(magrittr)
 
 # Transform
 
@@ -62,17 +62,13 @@ cmh_map %<>%
          ) %>%
   filter(is.na(mcaid_id) == FALSE)
 
-sub_sis <-
-sub_sis %>% 
+sub_sis %<>% 
   left_join(cmh_map, by = "mcaid_id") %>%
   distinct() %>%
-  select(sis_id:mcaid_id,cmhsp_id:cmhsp_nm,agency,
-         interviewer_orig,interviewer,current_int,
-         sis_cl_st,
-         sis_wk:sis_yrwk,sis_date:LivingType) %>%
   mutate(agency = as.character(agency),
          agency = ifelse(is.na(cmhsp_nm) == TRUE,
-                         yes = agency, no = cmhsp_nm))
+                         yes = agency, no = cmhsp_nm)) %>%
+  select(-cmhsp_id,-as_of_dt,-cmhsp_nm)
 
 # Empty Mcaid IDs in SIS
 # sum(is.na(sub_sis$mcaid_id)) 
