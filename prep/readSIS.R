@@ -11,6 +11,8 @@
   
 # Subset and clean
   
+  names(sis_full)[1] <- "sis_id" 
+  
   sis <- 
     sis_full %>% 
     # Filter Status == Completed
@@ -111,7 +113,7 @@
     #   LivingType <- as.factor(LivingType)
     # ) %>%
     rename(
-      sis_id = `ï..formResultId`,
+      #sis_id = `ï..formResultId`,
       agency = groupName,
       PIHP = enterpriseName,
       gender = sis_cl_sex_cd,
