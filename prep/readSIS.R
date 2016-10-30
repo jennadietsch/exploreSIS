@@ -130,7 +130,8 @@
       # Identifiers 
       sis_id, mcaid_id,
       # Assessment info
-      interviewer, interviewer_orig, agency, PIHP, sis_why, contains("reln"),
+      interviewer, interviewer_orig, agency, PIHP, sis_why, sis_cl_attend,
+      contains("reln"),
       # Assessment date fields
       sis_date, sis_wk, sis_yr, sis_yrwk, DaysSince, start, end, duration,
       dateUpdated, statusChangeDate, 
@@ -142,6 +143,7 @@
       Q2A1_TOS:Q2F8_ImportantFor,
       Q3A1_TOS:Q3A8_ImportantFor,
       Q4A1v1:sis_s44n,
+      contains("scr"),
       # Disability status
       contains("disab"),
       # Employment status
