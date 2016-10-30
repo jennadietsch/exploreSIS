@@ -68,7 +68,7 @@ sub_sis %<>%
   mutate(agency = as.character(agency),
          agency = ifelse(is.na(cmhsp_nm) == TRUE,
                          yes = agency, no = cmhsp_nm)) %>%
-  select(-cmhsp_id,-as_of_dt,-cmhsp_nm)
+  select(-as_of_dt,-cmhsp_nm)
 
 # Empty Mcaid IDs in SIS
 # sum(is.na(sub_sis$mcaid_id)) 
