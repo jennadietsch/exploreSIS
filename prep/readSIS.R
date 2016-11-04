@@ -120,7 +120,8 @@
       race = sis_race,
       ethnic = sis_ethnic,
       sis_date = sis_completed_dt
-    )
+    ) %>%
+    filter(is.na(sis_date) == T)
   
 # Make subset for analysis
   
@@ -158,50 +159,3 @@
   paste0("The following fields were not included in the analysis dataset: ")
   setdiff(colnames(sis_full),colnames(sub_sis))
       
-###########################################################################
-  
-# # Create subset of summary variables
-#   sub_sis <-
-#   sis %>%
-#     select(sis_id, 
-#            mcaid_id,
-#            sis_cl_st,
-#            ReasonCompleted, InterviewSetting,
-#            IndividualParticipation,
-#            LivingSituation,
-#            sis_sup1_reln_typ_cd, sis_res1_reln_typ_cd,
-#            homeliving_std = s1a_Score_Standard,
-#            homeliving_pct = s1a_Score_Percent,
-#            commliving_std = s1b_Score_Standard,
-#            commliving_pct = s1b_Score_Percent,
-#            hlthsafety_std = s1e_Score_Standard,
-#            hlthsafety_pct = s1e_Score_Percent,
-#            lifelearng_std = s1c_Score_Standard,
-#            lifelearng_pct = s1c_Score_Percent,
-#            employment_std = s1d_Score_Standard,
-#            employment_pct = s1d_Score_Percent,
-#            social_std = s1f_Score_Standard,
-#            social_pct = s1f_Score_Percent,
-#            SupportNeedsIndex,
-#            TotalStandard,
-#            TotalPercentile,
-#            # And Section 1
-#            s1a_1_fqy:s1f_8_for,s1f_Score_Raw,
-#            # And Section 2
-#            s2_1_fqy:s2_Score_Eight_Raw,
-#            # And Section 3
-#            s3a_1_support:s3b_Score_Total) %>%
-#     mutate(ABE_std = homeliving_std + commliving_std + hlthsafety_std,
-#            self_advoc = s2_1_fqy + s2_1_dst + s2_1_tos,
-#            money_mgmt = s2_2_fqy + s2_2_dst + s2_2_tos,
-#            no_exploit = s2_3_fqy + s2_3_dst + s2_3_tos,
-#            legal_resp = s2_4_fqy + s2_4_dst + s2_4_tos,
-#            participate = s2_5_fqy + s2_5_dst + s2_5_tos,
-#            legal_srvs = s2_6_fqy + s2_6_dst + s2_6_tos,
-#            decisions = s2_7_fqy + s2_7_dst + s2_7_tos,
-#            other_advoc = s2_8_fqy + s2_8_dst + s2_8_tos) %>%
-#     select(sis_id:TotalPercentile,ABE_std,
-#            s1a_1_fqy:s1f_8_for,
-#            s2_1_fqy:s2_Score_Eight_Raw,
-#            self_advoc:other_advoc,
-#            s3a_1_support:s3b_Score_Total) 
