@@ -121,7 +121,7 @@
       ethnic = sis_ethnic,
       sis_date = sis_completed_dt
     ) %>%
-    filter(is.na(sis_date) == T)
+    filter(is.na(sis_date) == F)
   
 # Make subset for analysis
   
