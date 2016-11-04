@@ -11,7 +11,6 @@
   library(visNetwork)
   library(d3heatmap)
   library(dplyr)
-  library(broom)
   library(forcats)
   library(magrittr)
   library(tidyr)
@@ -72,19 +71,19 @@
 # TRANSFORM SECTIONS TO BREAK DOWN TYPE OF SERVICE  
 # Process heavy computations up front to allow for cleaner performance
   # Section 1
-  s1_tos <-
+  q2_tos <-
     scrub_sis %>%
     filter(is.na(fake_id) == FALSE) %>% # Remove empty randomized IDs
     group_by(fake_id) %>% 
     filter(as.Date(sis_date) == max(as.Date(sis_date))) %>% # Most recent per ID
     ungroup() %>% droplevels() %>%
     select(fake_id,agency,sis_date,ends_with("tos")) %>% 
-    select(fake_id,agency,sis_date,starts_with("s1")) %>%
+    select(fake_id,agency,sis_date,starts_with("Q2")) %>%
     mutate_each(funs(as.character), -fake_id, -agency, -sis_date) %>%
-    gather(item, tos, s1a_1_tos:s1f_8_tos) %>%
+    gather(item, tos, Q2A1_TOS:Q2F8_TOS) %>%
     rename(type = tos) %>%
     mutate(type_n = as.numeric(type),
-           item = gsub("tos","",item),
+           item = gsub("TOS","",item),
            id = as.factor(paste0(fake_id,item))
     ) %>%
     group_by(id, fake_id, agency, sis_date, item, type) %>%
@@ -92,56 +91,56 @@
               type_n = sum(type_n)) %>%
     ungroup() 
   
-  s1_fqy <-
+  q2_fqy <-
     scrub_sis %>%
     filter(is.na(fake_id) == FALSE) %>% # Remove empty Medicaid IDs
     group_by(fake_id) %>% 
     filter(as.Date(sis_date) == max(as.Date(sis_date))) %>% # Most recent per ID
     ungroup() %>% droplevels() %>%
-    select(fake_id, agency, sis_date,ends_with("fqy")) %>% 
-    select(fake_id, agency, sis_date, starts_with("s1")) %>%
+    select(fake_id, agency, sis_date,ends_with("Fqy")) %>% 
+    select(fake_id, agency, sis_date, starts_with("Q2")) %>%
     mutate_each(funs(as.character), -fake_id, -agency, -sis_date) %>%
-    gather(item, fqy, s1a_1_fqy:s1f_8_fqy) %>%
+    gather(item, fqy, Q2A1_Fqy:Q2F8_Fqy) %>%
     rename(frequency = fqy) %>%
     mutate(frequency_n = as.numeric(frequency),
-           item = gsub("fqy","",item),
+           item = gsub("Fqy","",item),
            id = as.factor(paste0(fake_id,item))
     ) %>%
     group_by(id, fake_id, agency, sis_date, item, frequency) %>%
     summarize(frequency_n = sum(frequency_n)) %>%
     ungroup() 
   
-  s1_dst <-
+  q2_dst <-
     scrub_sis %>%
     filter(is.na(fake_id) == FALSE) %>% # Remove empty Medicaid IDs
     group_by(fake_id) %>% 
     filter(as.Date(sis_date) == max(as.Date(sis_date))) %>% # Most recent per ID
     ungroup() %>% droplevels() %>%
-    select(fake_id, agency, sis_date, ends_with("dst")) %>% 
-    select(fake_id, agency, sis_date, starts_with("s1")) %>%
+    select(fake_id, agency, sis_date, ends_with("DST")) %>% 
+    select(fake_id, agency, sis_date, starts_with("Q2")) %>%
     mutate_each(funs(as.character), -fake_id, -agency, -sis_date) %>%
-    gather(item, dst, s1a_1_dst:s1f_8_dst) %>%
+    gather(item, dst, Q2A1_DST:Q2F8_DST) %>%
     rename(DST = dst) %>%
     mutate(DST_n = as.numeric(DST),
-           item = gsub("dst","",item),
+           item = gsub("DST","",item),
            id = as.factor(paste0(fake_id,item))
     ) %>%
     group_by(id, fake_id, agency, sis_date, item, DST) %>%
     summarize(DST_n = sum(DST_n)) %>%
     ungroup() 
   
-  s1_to <-
+  q2_to <-
     scrub_sis %>%
     filter(is.na(fake_id) == FALSE) %>% # Remove empty randomized IDs
     group_by(fake_id) %>% 
     filter(as.Date(sis_date) == max(as.Date(sis_date))) %>% # Most recent per ID
     ungroup() %>% droplevels() %>%
-    select(fake_id,agency,sis_date,ends_with("to")) %>% 
-    select(fake_id,agency,sis_date,starts_with("s1")) %>%
+    select(fake_id,agency,sis_date,ends_with("ImportantTo")) %>% 
+    select(fake_id,agency,sis_date,starts_with("Q2")) %>%
     mutate_each(funs(as.character), -fake_id, -agency, -sis_date) %>%
-    gather(item, import_to, s1a_1_to:s1f_8_to) %>%
+    gather(item, import_to, Q2A1_ImportantTo:Q2F8_ImportantTo) %>%
     mutate(import_to_n = as.numeric(import_to),
-           item = gsub("to","",item),
+           item = gsub("ImportantTo","",item),
            id = as.factor(paste0(fake_id,item))
     ) %>%
     group_by(id, fake_id, agency, sis_date, item, import_to) %>%
@@ -149,18 +148,18 @@
               import_to_n = sum(import_to_n)) %>%
     ungroup()
   
-  s1_for <-
+  q2_for <-
     scrub_sis %>%
     filter(is.na(fake_id) == FALSE) %>% # Remove empty randomized IDs
     group_by(fake_id) %>% 
     filter(as.Date(sis_date) == max(as.Date(sis_date))) %>% # Most recent per ID
     ungroup() %>% droplevels() %>%
-    select(fake_id,agency,sis_date,ends_with("for")) %>% 
-    select(fake_id,agency,sis_date,starts_with("s1")) %>%
+    select(fake_id,agency,sis_date,ends_with("ImportantFor")) %>% 
+    select(fake_id,agency,sis_date,starts_with("Q2")) %>%
     mutate_each(funs(as.character), -fake_id, -agency, -sis_date) %>%
-    gather(item, import_for, s1a_1_for:s1f_8_for) %>%
+    gather(item, import_for, Q2A1_ImportantFor:Q2F8_ImportantFor) %>%
     mutate(import_for_n = as.numeric(import_for),
-           item = gsub("for","",item),
+           item = gsub("ImportantFor","",item),
            id = as.factor(paste0(fake_id,item))
     ) %>%
     group_by(id, fake_id, agency, sis_date, item, import_for) %>%
@@ -169,33 +168,32 @@
     ungroup()
   
   # Join intermediate tables
-  s1 <- 
-  s1_tos %>% 
-    inner_join(s1_fqy, by = "id") %>%
+  q2 <- 
+  q2_tos %>% 
+    inner_join(q2_fqy, by = "id") %>%
     select(id, fake_id = fake_id.x, agency = agency.x, 
            sis_date = sis_date.x, item = item.x, 
            type, type_n, frequency, frequency_n) %>%
-    inner_join(s1_dst, by = "id") %>%
+    inner_join(q2_dst, by = "id") %>%
     select(id, fake_id = fake_id.x, agency = agency.x, 
            sis_date = sis_date.x, item = item.x, 
            type, type_n, frequency, frequency_n, DST, DST_n) %>%
-    inner_join(s1_to, by = "id") %>%
+    inner_join(q2_to, by = "id") %>%
     select(id, fake_id = fake_id.x, agency = agency.x, 
            sis_date = sis_date.x, item = item.x, 
            type, type_n, frequency, frequency_n, DST, DST_n,
            import_to_n) %>%
-    inner_join(s1_for, by = "id") %>%
+    inner_join(q2_for, by = "id") %>%
     select(id, fake_id = fake_id.x, agency = agency.x, 
            sis_date = sis_date.x, item = item.x, 
            type, type_n, frequency, frequency_n, DST, DST_n,
            import_to_n, import_for_n)
   
   # Remove intermediate tables
-  rm(s1_dst); rm(s1_fqy); rm(s1_tos); rm(s1_to); rm(s1_for)
+  rm(q2_dst); rm(q2_fqy); rm(q2_tos); rm(q2_to); rm(q2_for)
   
   # Remove extra cols and recode vars  
-  s1 <-
-    s1 %>%
+  q2 %<>%
     left_join(needs, by = "item") %>% # add item level desc and groups
     mutate(type = car::recode(type,
                             "'0' = 'None';
@@ -225,20 +223,20 @@
     select(-import_to_n, -import_for_n, -n) %>%
     droplevels()
   
-  # Process Section 2
-  s2_tos <-
+  # Process Section 3: Protection and Advocacy
+  q3_tos <-
     scrub_sis %>%
     filter(is.na(fake_id) == FALSE) %>% # Remove empty Medicaid IDs
     group_by(fake_id) %>% 
     filter(as.Date(sis_date) == max(as.Date(sis_date))) %>% # Most recent per ID
     ungroup() %>% droplevels() %>%
-    select(fake_id,agency,sis_date,ends_with("tos")) %>% 
-    select(fake_id,agency,sis_date,starts_with("s2")) %>%
+    select(fake_id,agency,sis_date,ends_with("TOS")) %>% 
+    select(fake_id,agency,sis_date,starts_with("Q3")) %>%
     mutate_each(funs(as.character), -fake_id, -agency, -sis_date) %>%
-    gather(item, tos, s2_1_tos:s2_8_tos) %>%
+    gather(item, tos, Q3A1_TOS:Q3A8_TOS) %>%
     rename(type = tos) %>%
     mutate(type_n = as.numeric(type),
-           item = gsub("tos","",item),
+           item = gsub("TOS","",item),
            id = as.factor(paste0(fake_id,item))
     ) %>%
     group_by(id, fake_id, agency, sis_date, item, type) %>%
@@ -246,57 +244,56 @@
               type_n = sum(type_n)) %>%
     ungroup() 
   
-  
-  s2_fqy <-
+  q3_fqy <-
     scrub_sis %>%
     filter(is.na(fake_id) == FALSE) %>% # Remove empty Medicaid IDs
     group_by(fake_id) %>% 
     filter(as.Date(sis_date) == max(as.Date(sis_date))) %>% # Most recent per ID
     ungroup() %>% droplevels() %>%
-    select(fake_id, agency, sis_date, ends_with("fqy")) %>% 
-    select(fake_id, agency, sis_date, starts_with("s2")) %>%
+    select(fake_id, agency, sis_date, ends_with("Fqy")) %>% 
+    select(fake_id, agency, sis_date, starts_with("Q3")) %>%
     mutate_each(funs(as.character), -fake_id, -agency, -sis_date) %>%
-    gather(item, fqy, s2_1_fqy:s2_8_fqy) %>%
+    gather(item, fqy, Q3A1_Fqy:Q3A8_Fqy) %>%
     rename(frequency = fqy) %>%
     mutate(frequency_n = as.numeric(frequency),
-           item = gsub("fqy","",item),
+           item = gsub("Fqy","",item),
            id = as.factor(paste0(fake_id,item))
     ) %>%
     group_by(id, fake_id, agency, sis_date, item, frequency) %>%
     summarize(frequency_n = sum(frequency_n)) %>%
     ungroup() 
   
-  s2_dst <-
+  q3_dst <-
     scrub_sis %>%
     filter(is.na(fake_id) == FALSE) %>% # Remove empty Medicaid IDs
     group_by(fake_id) %>% 
     filter(as.Date(sis_date) == max(as.Date(sis_date))) %>% # Most recent per ID
     ungroup() %>% droplevels() %>%
-    select(fake_id, agency, sis_date, ends_with("dst")) %>% 
-    select(fake_id, agency, sis_date, starts_with("s2")) %>%
+    select(fake_id, agency, sis_date, ends_with("DST")) %>% 
+    select(fake_id, agency, sis_date, starts_with("Q3")) %>%
     mutate_each(funs(as.character), -fake_id, -agency, -sis_date) %>%
-    gather(item, dst, s2_1_dst:s2_8_dst) %>%
+    gather(item, dst, Q3A1_DST:Q3A8_DST) %>%
     rename(DST = dst) %>%
     mutate(DST_n = as.numeric(DST),
-           item = gsub("dst","",item),
+           item = gsub("DST","",item),
            id = as.factor(paste0(fake_id,item))
     ) %>%
     group_by(id, fake_id, agency, sis_date, item, DST) %>%
     summarize(DST_n = sum(DST_n)) %>%
     ungroup() 
   
-  s2_to <-
+  q3_to <-
     scrub_sis %>%
     filter(is.na(fake_id) == FALSE) %>% # Remove empty randomized IDs
     group_by(fake_id) %>% 
     filter(as.Date(sis_date) == max(as.Date(sis_date))) %>% # Most recent per ID
     ungroup() %>% droplevels() %>%
-    select(fake_id,agency,sis_date,ends_with("to")) %>% 
-    select(fake_id,agency,sis_date,starts_with("s2")) %>%
+    select(fake_id,agency,sis_date,ends_with("ImportantTo")) %>% 
+    select(fake_id,agency,sis_date,starts_with("Q3")) %>%
     mutate_each(funs(as.character), -fake_id, -agency, -sis_date) %>%
-    gather(item, import_to, s2_1_to:s2_8_to) %>%
+    gather(item, import_to, Q3A1_ImportantTo:Q3A8_ImportantTo) %>%
     mutate(import_to_n = as.numeric(import_to),
-           item = gsub("to","",item),
+           item = gsub("ImportantTo","",item),
            id = as.factor(paste0(fake_id,item))
     ) %>%
     group_by(id, fake_id, agency, sis_date, item, import_to) %>%
@@ -304,18 +301,18 @@
               import_to_n = sum(import_to_n)) %>%
     ungroup()
   
-  s2_for <-
+  q3_for <-
     scrub_sis %>%
     filter(is.na(fake_id) == FALSE) %>% # Remove empty randomized IDs
     group_by(fake_id) %>% 
     filter(as.Date(sis_date) == max(as.Date(sis_date))) %>% # Most recent per ID
     ungroup() %>% droplevels() %>%
-    select(fake_id,agency,sis_date,ends_with("for")) %>% 
-    select(fake_id,agency,sis_date,starts_with("s2")) %>%
+    select(fake_id,agency,sis_date,ends_with("ImportantFor")) %>% 
+    select(fake_id,agency,sis_date,starts_with("Q3")) %>%
     mutate_each(funs(as.character), -fake_id, -agency, -sis_date) %>%
-    gather(item, import_for, s2_1_for:s2_8_for) %>%
+    gather(item, import_for, Q3A1_ImportantFor:Q3A8_ImportantFor) %>%
     mutate(import_for_n = as.numeric(import_for),
-           item = gsub("for","",item),
+           item = gsub("ImportantFor","",item),
            id = as.factor(paste0(fake_id,item))
     ) %>%
     group_by(id, fake_id, agency, sis_date, item, import_for) %>%
@@ -324,22 +321,22 @@
     ungroup()
   
   # Join intermediate tables
-  s2 <- 
-    s2_tos %>% 
-    inner_join(s2_fqy, by = "id") %>%
+  q3 <- 
+    q3_tos %>% 
+    inner_join(q3_fqy, by = "id") %>%
     select(id, fake_id = fake_id.x, agency = agency.x, 
            sis_date = sis_date.x, item = item.x, 
            type, type_n, frequency, frequency_n) %>%
-    inner_join(s2_dst, by = "id") %>%
+    inner_join(q3_dst, by = "id") %>%
     select(id, fake_id = fake_id.x, agency = agency.x, 
            sis_date = sis_date.x, item = item.x, 
            type, type_n, frequency, frequency_n, DST, DST_n) %>%
-    inner_join(s2_to, by = "id") %>%
+    inner_join(q3_to, by = "id") %>%
     select(id, fake_id = fake_id.x, agency = agency.x, 
            sis_date = sis_date.x, item = item.x, 
            type, type_n, frequency, frequency_n, DST, DST_n,
            import_to_n) %>%
-    inner_join(s2_for, by = "id") %>%
+    inner_join(q3_for, by = "id") %>%
     select(id, fake_id = fake_id.x, agency = agency.x, 
            sis_date = sis_date.x, item = item.x, 
            type, type_n, frequency, frequency_n, DST, DST_n,
@@ -347,11 +344,11 @@
     droplevels()
   
   # Remove intermediate tables
-  rm(s2_dst); rm(s2_fqy); rm(s2_tos); rm(s2_to); rm(s2_for)
+  rm(q3_dst); rm(q3_fqy); rm(q3_tos); rm(q3_to); rm(q3_for)
   
   # Remove extra cols and recode vars  
-  s2 <-
-  s2 %>%
+  q3 <-
+  q3 %>%
     left_join(needs, by = "item") %>% # add item level desc and groups
     mutate(type = car::recode(type,
                               "'0' = 'None';
