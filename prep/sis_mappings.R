@@ -344,7 +344,7 @@ needs <-
                                 "Q2B2_","Q2B7_"),
          refer_nurs = item %in% c("Q2E1_","Q1A1_","Q1A2_","Q1A3_","Q1A4_",
                                   "Q1A9_","Q1A10_","Q1A11_","Q1A12_","Q1A13_",
-                                  "Q1A19_"),
+                                  "Q1A19_","Q1A16_","Q1A17_","Q1A18_"),
          refer_sp = item %in% c("Q1A5_","Q1A6_","Q1A7_"),
          refer_pt = item %in% c("Q1A2_","Q1A3_","Q2E7_","Q2B1_",
                                 "Q2B4_","Q2E2_","Q1A14_","Q1A8_"),
