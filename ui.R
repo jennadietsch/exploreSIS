@@ -377,7 +377,7 @@ dashboardPage(
                     tabPanel(
                       "SIS Support Needs Scale",
                       p(
-                        "The Support Needs Scale (Section 1 of the SIS) consists 
+                        "The Support Needs Scale (Section 2 of the SIS) consists 
                         of 49 activities grouped into six domains: ",
                         em(
                           "Home Living, Community Living, Lifelong Learning, 
@@ -390,7 +390,7 @@ dashboardPage(
                       ),
                       p(
                         "The SIS also measures exceptional Medical and Behavioral 
-                        Support Needs, assessing 15 medical conditions and 12 
+                        Support Needs, assessing 18 medical conditions and 12 
                         problem behaviors. Since certain medical conditions and 
                         challenging behaviors may require additional support, 
                         these items indicate cases where the ", 
@@ -483,26 +483,26 @@ dashboardPage(
           column(
             width = 6,
             box(
-              title = "Types of Need (Section 1: Supports)", 
+              title = "Types of Need (Section 2: Supports)", 
               status = "warning",
               collapsible = TRUE,
               collapsed = F,
               width = NULL,
               selectInput(
-                "select_area_s1",
+                "select_area_q2",
                 label = "Select life area:",
-                choices = c("All", levels(as.factor(s1$section_desc)))
+                choices = c("All", levels(as.factor(q2$section_desc)))
               ),
               tabBox(
                 width = NULL,
                 tabPanel(
                   "Table",
-                  dataTableOutput("s1_dt")
+                  dataTableOutput("q2_dt")
                 ),
                 tabPanel(
                   "Chart",
-                  uiOutput('s1domain'),
-                  parsetOutput("tos_s1")
+                  uiOutput('q2domain'),
+                  parsetOutput("tos_q2")
                 ),
                 tabPanel(
                   "About",
@@ -583,7 +583,7 @@ dashboardPage(
                       br(),
                       strong("Type of Support"),
                       p(
-                        "When completing Section 1, the support needs for each 
+                        "When completing Section 2, the support needs for each 
                         activity addressed in the section are examined 
                         with regard to three measures of support need:",
                         br(),
@@ -629,7 +629,7 @@ dashboardPage(
               )
             ),
             box(
-              title = "Types of Need (Section 2: Protection)", 
+              title = "Types of Need (Section 3: Protection)", 
               status = "warning",
               collapsible = TRUE, 
               collapsed = TRUE,
@@ -638,12 +638,12 @@ dashboardPage(
                 width = NULL,
                 tabPanel(
                   "Summary",
-                  dataTableOutput("s2_dt")
+                  dataTableOutput("q3_dt")
                 ),
                 tabPanel(
                   "Chart",
-                  uiOutput('s2domain'),
-                  parsetOutput("tos_s2")
+                  uiOutput('q3domain'),
+                  parsetOutput("tos_q3")
                 ),
                 tabPanel(
                   "About",
@@ -654,7 +654,7 @@ dashboardPage(
                       p(
                         "The table shows the average (", em("All"), 
                         ") and standard deviation (", em("StDev"),
-                        ") of raw scores for each item from section 2 of the SIS,
+                        ") of raw scores for each item from section 3 of the SIS,
                         which addresses needs related to protection and advocacy.  
                         The standard deviation can be used 
                         to look at items whose total score has the greatest 
@@ -725,7 +725,7 @@ dashboardPage(
                       br(),
                       strong("Type of Support"),
                       p(
-                        "When completing Section 2, the support needs for each 
+                        "When completing Section 3, the support needs for each 
                         activity related to protection and advocacy are examined 
                         with regard to three measures of support need:",
                         br(),
@@ -914,12 +914,12 @@ dashboardPage(
                 ),
                 tabPanel(
                   "About",
-                  h4("Section 3 (a.k.a. Exceptional Medical and Behavioral Support Needs)"),
+                  h4("Section 1 (a.k.a. Exceptional Medical and Behavioral Support Needs)"),
                   p(
                     "Certain medical conditions and challenging behaviors are 
                     related to increased levels of support, regardless of 
                     support needs in other life areas. This section of the SIS 
-                    looks at 15 medical conditions and 13 problem behaviors 
+                    looks at 18 medical conditions and 13 problem behaviors 
                     commonly associated with intellectual disabilities. "
                   ),
                   h4("Scoring"),
@@ -1278,17 +1278,17 @@ dashboardPage(
                   "Support Needs",
                   uiOutput('import'),
                   selectInput(
-                    "need_import_s1_measure",
+                    "need_import_q2_measure",
                     label = "Show the:",
                     choices = c("Number of people with need", 
                                 "Average level of need"), 
                     selected = "Number of people with need"
                   ),
-                  plotlyOutput("need_import_s1")
+                  plotlyOutput("need_import_q2")
                 ),
                 tabPanel(
                   "Important To/For",
-                  plotlyOutput("import_s1")
+                  plotlyOutput("import_q2")
                 ),
                 tabPanel(
                   "Protection",
@@ -1334,7 +1334,7 @@ dashboardPage(
                     tabPanel(
                       "Protection",
                       p(
-                        "Section II of the SIS (the Supplemental Protection and 
+                        "Section 3 of the SIS (the Supplemental Protection and 
                         Advocacy Scale) measures 8 activities such as: ",
                         em(
                           "self-advocacy, money management, protecting self from 
@@ -1348,7 +1348,11 @@ dashboardPage(
                         "The top 4 items in this section of the SIS are intended to 
                         be included in person-centered planning.  This graph shows 
                         which items most frequently make it to the", 
-                        em("top 4"), "list of clients in the selected agency."
+                        em("top 4"), "list of clients in the selected agency. The 
+                        ranking of top 4 items per person is done using a 
+                        methodology that includes ties, so that items where the 
+                        total score was the same across multiple questions are 
+                        all included in the list."
                       ),
                       p(
                         "CMHSPs may be interested in identifying how these areas 
@@ -1575,7 +1579,7 @@ dashboardPage(
                   strong("A few words about service mappings:"),
                   p(
                     "The mappings connect each SIS need (",
-                    em("i.e. item from SIS sections 1-3"),
+                    em("i.e. each item from SIS sections 1-3"),
                     ") to each HCPCS code that might be used to address that 
                     need, either in full or in part.  Service codes are included 
                     if they were provided within the state according to the most 
