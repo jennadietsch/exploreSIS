@@ -1382,7 +1382,7 @@
                                 tick0 = minx, 
                                 dtick = sizex),
                    yaxis = list(title = "People assessed", showgrid = F),
-                   annotations = list(x = max(scr_1B_raw_total), xanchor = "right", 
+                   annotations = list(x = maxx, xanchor = "right", 
                                       y = 1, yanchor = "top", yref = "paper",
                                       showarrow = F, align = "left",
                                       text = notetxt)) %>% 
@@ -1998,7 +1998,7 @@
                       miss_reason = sum(is.na(sis_why)),
                       #miss_liv = sum(is.na(LivingSituation)),
                       #miss_setting = sum(is.na(InterviewSetting)),
-                      miss_supports = sum(is.na(sis_sup1_reln)),
+                      #miss_supports = sum(is.na(sis_sup1_reln)),
                       #miss_respond = sum(is.na(sis_res1_reln_typ_cd)),
                       not_mich = sum(as.numeric(sis_cl_st != "MI"))) %>%
             left_join(imp_to, by = "interviewer") %>%
@@ -2010,7 +2010,7 @@
                                  'Unmatched Mcaid IDs','Missing Start Time',
                                  'Missing End Time','Missing Reason',
                                  #'No Living Situation','No Intrvw Setting',
-                                 'Missing Supports Info',
+                                 #'Missing Supports Info',
                                  #'Missing Respondents',
                                  'State other than MI',
                                  'No Important To','No Important For'),
@@ -2049,11 +2049,11 @@
           #             backgroundSize = '100% 90%',
           #             backgroundRepeat = 'no-repeat',
           #             backgroundPosition = 'center') %>%
-          formatStyle('miss_supports',
-                      background = styleColorBar(mia$miss_supports, 'steelblue'),
-                      backgroundSize = '100% 90%',
-                      backgroundRepeat = 'no-repeat',
-                      backgroundPosition = 'center') %>%
+          # formatStyle('miss_supports',
+          #             background = styleColorBar(mia$miss_supports, 'steelblue'),
+          #             backgroundSize = '100% 90%',
+          #             backgroundRepeat = 'no-repeat',
+          #             backgroundPosition = 'center') %>%
           # formatStyle('miss_respond',
           #             background = styleColorBar(mia$miss_respond, 'steelblue'),
           #             backgroundSize = '100% 90%',
