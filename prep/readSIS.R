@@ -132,7 +132,7 @@
       sis_id, mcaid_id,
       # Assessment info
       interviewer, interviewer_orig, agency, PIHP, sis_why, sis_cl_attend,
-      contains("reln"),
+      # contains("reln"),
       # Assessment date fields
       sis_date, sis_wk, sis_yr, sis_yrwk, DaysSince, start, end, duration,
       dateUpdated, statusChangeDate, 
