@@ -9,226 +9,346 @@ names(sis_names)[1] <- "field"
 
 needs <-
   sis_names %>%
-  mutate(section = ifelse(grepl("^s[0-9]", field), 
+  mutate(section = ifelse(grepl("^Q[0-9]", field), 
                           yes = gsub("_.*$", "", field),
                           no = NA),
-         item = ifelse(grepl("^s[0-9]", field), 
-                       yes = gsub("fqy|dst|tos|to|for|notes|support","",field),
+         section = substr(section, start=1, stop=3),
+         item = ifelse(grepl("^Q[0-9]", field), 
+                       yes = gsub("ExMedSupport|ExBehSupport|ImportantTo|ImportantFor|TOS|DST|Fqy|Notes|Other","",field),
                        no = NA),
-         item_type = ifelse(grepl("^s[0-9]", field), 
+         item_type = ifelse(grepl("^Q[0-9]", field), 
                             yes = gsub("^.*_","",field),
                             no = NA),
-         section_desc = car::recode(section,
-                                    "'s1a' = 'Home Living';
-                                    's1b' = 'Community Living';
-                                    's1c' = 'Lifelong Learning';
-                                    's1d' = 'Employment';
-                                    's1e' = 'Health and Safety';
-                                    's1f' = 'Social Activities';
-                                    's2' = 'Protection and Advocacy';
-                                    's3a' = 'Medical Supports';
-                                    's3b' = 'Behavioral Supports'"),
-         item_desc = car::recode(item,
-                                 "'s1a_1_' = 'Toilet';
-                                 's1a_2_' = 'Clothes';
-                                 's1a_3_' = 'Preparing food';
-                                 's1a_4_' = 'Eating food';
-                                 's1a_5_' = 'Housekeeping';
-                                 's1a_6_' = 'Dressing';
-                                 's1a_7_' = 'Hygiene';
-                                 's1a_8_' = 'Appliances';
-                                 's1b_1_' = 'Getting Around';
-                                 's1b_2_' = 'Recreation';
-                                 's1b_3_' = 'Public Services';
-                                 's1b_4_' = 'Visit Friends/Family';
-                                 's1b_5_' = 'Preferred Activities';
-                                 's1b_6_' = 'Shopping';
-                                 's1b_7_' = 'Community interaction';
-                                 's1b_8_' = 'Accessing Settings';
-                                 's1c_1_' = 'Learning interaction';
-                                 's1c_2_' = 'Learning decisions';
-                                 's1c_3_' = 'Problem solving';
-                                 's1c_4_' = 'Using technology';
-                                 's1c_5_' = 'Accessing training';
-                                 's1c_6_' = 'Academics';
-                                 's1c_7_' = 'Learning health skills';
-                                 's1c_8_' = 'Learning self-determination';
-                                 's1c_9_' = 'Learning self-management';
-                                 's1d_1_' = 'Job accomodations';
-                                 's1d_2_' = 'Specific job skills';
-                                 's1d_3_' = 'Co-worker interaction';
-                                 's1d_4_' = 'Supervisor interaction';
-                                 's1d_5_' = 'Work speed';
-                                 's1d_6_' = 'Work quality';
-                                 's1d_7_' = 'Changing assignments';
-                                 's1d_8_' = 'Seeking assistance';
-                                 's1e_1_' = 'Taking medications';
-                                 's1e_2_' = 'Avoiding hazards';
-                                 's1e_3_' = 'Obtaining health care';
-                                 's1e_4_' = 'Moving about';
-                                 's1e_5_' = 'Accessing emergency svs';
-                                 's1e_6_' = 'Nutritional diet';
-                                 's1e_7_' = 'Physical fitness';
-                                 's1e_8_' = 'Emotional well-being';
-                                 's1f_1_' = 'Socializing in home';
-                                 's1f_2_' = 'Recreation with others';
-                                 's1f_3_' = 'Socializing out of home';
-                                 's1f_4_' = 'Making friends';
-                                 's1f_5_' = 'Communicating with helpers';
-                                 's1f_6_' = 'Appropriate social skills';
-                                 's1f_7_' = 'Intimate relationships';
-                                 's1f_8_' = 'Volunteer work';
-                                 's2_1_' = 'Self-advocacy';
-                                 's2_2_' = 'Money management';
-                                 's2_3_' = 'Exploited by others';
-                                 's2_4_' = 'Legal responsibility';
-                                 's2_5_' = 'Participation';
-                                 's2_6_' = 'Legal services';
-                                 's2_7_' = 'Decision making';
-                                 's2_8_' = 'Other advocacy';
-                                 's3a_1_' = 'Oxygen therapy';
-                                 's3a_2_' = 'Postural drainage';
-                                 's3a_3_' = 'Chest PT';
-                                 's3a_4_' = 'Suctioning';
-                                 's3a_5_' = 'Oral stimulation';
-                                 's3a_6_' = 'Tube feeding';
-                                 's3a_7_' = 'Parental feeding';
-                                 's3a_8_' = 'Positioning';
-                                 's3a_9_' = 'Dressing wounds';
-                                 's3a_10_' = 'Prevent infection';
-                                 's3a_11_' = 'Seizure mgmt';
-                                 's3a_12_' = 'Dialysis';
-                                 's3a_13_' = 'Ostomy care';
-                                 's3a_14_' = 'Transfers';
-                                 's3a_15_' = 'Therapy svs';
-                                 's3a_16_' = 'Other medical';
-                                 's3b_1_' = 'Assault';
-                                 's3b_2_' = 'Property destruction';
-                                 's3b_3_' = 'Stealing';
-                                 's3b_4_' = 'Self injury';
-                                 's3b_5_' = 'Pica';
-                                 's3b_6_' = 'Suicide attempts';
-                                 's3b_7_'  = 'Sexual aggression';
-                                 's3b_8_' = 'Inappropriate';
-                                 's3b_9_' = 'Outbursts';
-                                 's3b_10_' = 'Wandering';
-                                 's3b_11_' = 'Substance abuse';
-                                 's3b_12_' = 'Mental health tx';
-                                 's3b_13_' = 'Other behavioral'"),
-         qol = car::recode(item,
-                           "'s1a_1_' = 'Physical Wellbeing';
-                           's1a_2_' = 'Physical Wellbeing';
-                           's1a_3_' = 'Physical Wellbeing';
-                           's1a_4_' = 'Physical Wellbeing';
-                           's1a_5_' = 'Physical Wellbeing';
-                           's1a_6_' = 'Physical Wellbeing';
-                           's1a_7_' = 'Physical Wellbeing';
-                           's1a_8_' = 'Physical Wellbeing';
-                           's1b_1_' = 'Social Inclusion';
-                           's1b_2_' = 'Social Inclusion';
-                           's1b_3_' = 'Social Inclusion';
-                           's1b_4_' = 'Interpersonal Relations';
-                           's1b_5_' = 'Social Inclusion';
-                           's1b_6_' = 'Social Inclusion';
-                           's1b_7_' = 'Social Inclusion';
-                           's1b_8_' = 'Social Inclusion';
-                           's1c_1_' = 'Social Inclusion';
-                           's1c_2_' = 'Personal Development';
-                           's1c_3_' = 'Personal Development';
-                           's1c_4_' = 'Personal Development';
-                           's1c_5_' = 'Personal Development';
-                           's1c_6_' = 'Personal Development';
-                           's1c_7_' = 'Physical Wellbeing';
-                           's1c_8_' = 'Self Determination';
-                           's1c_9_' = 'Personal Development';
-                           's1d_1_' = 'Material Wellbeing';
-                           's1d_2_' = 'Material Wellbeing';
-                           's1d_3_' = 'Material Wellbeing';
-                           's1d_4_' = 'Material Wellbeing';
-                           's1d_5_' = 'Material Wellbeing';
-                           's1d_6_' = 'Material Wellbeing';
-                           's1d_7_' = 'Material Wellbeing';
-                           's1d_8_' = 'Material Wellbeing';
-                           's1e_1_' = 'Physical Wellbeing';
-                           's1e_2_' = 'Physical Wellbeing';
-                           's1e_3_' = 'Physical Wellbeing';
-                           's1e_4_' = 'Physical Wellbeing';
-                           's1e_5_' = 'Physical Wellbeing';
-                           's1e_6_' = 'Personal Development';
-                           's1e_7_' = 'Personal Development';
-                           's1e_8_' = 'Emotional Wellbeing';
-                           's1f_1_' = 'Interpersonal Relations';
-                           's1f_2_' = 'Interpersonal Relations';
-                           's1f_3_' = 'Interpersonal Relations';
-                           's1f_4_' = 'Interpersonal Relations';
-                           's1f_5_' = 'Self Determination';
-                           's1f_6_' = 'Interpersonal Relations';
-                           's1f_7_' = 'Interpersonal Relations';
-                           's1f_8_' = 'Social Inclusion';
-                           's2_1_' = 'Rights';
-                           's2_2_' = 'Self Determination';
-                           's2_3_' = 'Rights';
-                           's2_4_' = 'Rights';
-                           's2_5_' = 'Social Inclusion';
-                           's2_6_' = 'Rights';
-                           's2_7_' = 'Self Determination';
-                           's2_8_' = 'Rights';
-                           's3a_1_' = 'Physical Wellbeing';
-                           's3a_2_' = 'Physical Wellbeing';
-                           's3a_3_' = 'Physical Wellbeing';
-                           's3a_4_' = 'Physical Wellbeing';
-                           's3a_5_' = 'Physical Wellbeing';
-                           's3a_6_' = 'Physical Wellbeing';
-                           's3a_7_' = 'Physical Wellbeing';
-                           's3a_8_' = 'Physical Wellbeing';
-                           's3a_9_' = 'Physical Wellbeing';
-                           's3a_10_' = 'Physical Wellbeing';
-                           's3a_11_' = 'Physical Wellbeing';
-                           's3a_12_' = 'Physical Wellbeing';
-                           's3a_13_' = 'Physical Wellbeing';
-                           's3a_14_' = 'Physical Wellbeing';
-                           's3a_15_' = 'Physical Wellbeing';
-                           's3a_16_' = 'Physical Wellbeing';
-                           's3b_1_' = 'Emotional Wellbeing';
-                           's3b_2_' = 'Emotional Wellbeing';
-                           's3b_3_' = 'Emotional Wellbeing';
-                           's3b_4_' = 'Emotional Wellbeing';
-                           's3b_5_' = 'Emotional Wellbeing';
-                           's3b_6_' = 'Emotional Wellbeing';
-                           's3b_7_'  = 'Emotional Wellbeing';
-                           's3b_8_' = 'Emotional Wellbeing';
-                           's3b_9_' = 'Emotional Wellbeing';
-                           's3b_10_' = 'Emotional Wellbeing';
-                           's3b_11_' = 'Emotional Wellbeing';
-                           's3b_12_' = 'Emotional Wellbeing';
-                           's3b_13_' = 'Emotional Wellbeing'")
+         section_desc = dplyr::recode(section,
+                                    Q1A = "Medical Supports",
+                                    Q1B = "Behavioral Supports",
+                                    Q2A = "Home Living",
+                                    Q2B = "Community Living",
+                                    Q2C = "Lifelong Learning",
+                                    Q2D = "Employment",
+                                    Q2E = "Health and Safety",
+                                    Q2F = "Social Activities",
+                                    Q3A = "Protection and Advocacy",
+                                    Q4A = "Supplemental Questions"),
+         item_desc = dplyr::recode(item,
+                                   Q1A1_ = "Oxygen therapy", 
+                                   Q1A2_ = "Postural drainage", 
+                                   Q1A3_ = "Chest PT", 
+                                   Q1A4_ = "Suctioning", 
+                                   Q1A5_ = "Oral Stimulation", 
+                                   Q1A6_ = "Tube feeding", 
+                                   Q1A7_ = "Parenteral feeding", 
+                                   Q1A8_ = "Positioning", 
+                                   Q1A9_ = "Wound dressing", 
+                                   Q1A10_ = "Infection control", 
+                                   Q1A11_ = "Seizure management",
+                                   Q1A12_ = "Dialysis", 
+                                   Q1A13_ = "Ostomy Care", 
+                                   Q1A14_ = "Transferring", 
+                                   Q1A15_ = "Therapy services", 
+                                   Q1A16_ = "Hypertension",
+                                   Q1A17_ = "Allergies",
+                                   Q1A18_ = "Diabetes",
+                                   Q1A19_ = "Other Medical (1st)",
+                                   Q1A20_ = "Other Medical (2nd)",
+                                   Q1A21_ = "Other Medical (3rd)",
+                                   Q1B1_ = "Assault", 
+                                   Q1B2_ = "Property destruction",
+                                   Q1B3_ = "Stealing", 
+                                   Q1B4_ = "Self-injury", 
+                                   Q1B5_ = "Ingestion", 
+                                   Q1B6_ = "Suicide attempts", 
+                                   Q1B7_ = "Sexual aggression", 
+                                   Q1B8_ = "Sexually inappropriate", 
+                                   Q1B9_ = "Outbursts", 
+                                   Q1B10_ = "Wandering",
+                                   Q1B11_ = "Substance abuse",
+                                   Q1B12_ = "Mental health",
+                                   Q1B13_ = "Other Behavioral (1st)",
+                                   Q1B14_ = "Other Behavioral (2nd)",
+                                   Q1B15_ = "Other Behavioral (3rd)",
+                                   Q2A1_ = "Home appliances", 
+                                   Q2A2_ = "Personal hygiene", 
+                                   Q2A3_ = "Toilet", 
+                                   Q2A4_ = "Dressing", 
+                                   Q2A5_ = "Preparing food", 
+                                   Q2A6_ = "Eating Food", 
+                                   Q2A7_ = "Laundry", 
+                                   Q2A8_ = "Housekeeping", 
+                                   Q2B1_ = "Transportation", 
+                                   Q2B2_ = "Recreation", 
+                                   Q2B3_ = "Preferred Activities", 
+                                   Q2B4_ = "Accessing public settings", 
+                                   Q2B5_ = "Using public services", 
+                                   Q2B6_ = "Shopping", 
+                                   Q2B7_ = "Community interaction", 
+                                   Q2B8_ = "Visit Friends/Family", 
+                                   Q2C1_ = "Learning problem-solving", 
+                                   Q2C2_ = "Learning functional skills", 
+                                   Q2C3_ = "Learning health skills", 
+                                   Q2C4_ = "Learning self-determination", 
+                                   Q2C5_ = "Learning self-management", 
+                                   Q2C6_ = "Educational decisions", 
+                                   Q2C7_ = "Accessing education", 
+                                   Q2C8_ = "Interaction during learning", 
+                                   Q2C9_ = "Learning with technology", 
+                                   Q2D1_ = "Learning job skills", 
+                                   Q2D2_ = "Accessing accommodations", 
+                                   Q2D3_ = "Coworker interaction", 
+                                   Q2D4_ = "Supervisor interaction", 
+                                   Q2D5_ = "Work speed", 
+                                   Q2D6_ = "Work quality", 
+                                   Q2D7_ = "Changing job assignments", 
+                                   Q2D8_ = "Seeking employer assistance", 
+                                   Q2E1_ = "Taking medications", 
+                                   Q2E2_ = "Moving about", 
+                                   Q2E3_ = "Avoiding hazards", 
+                                   Q2E4_ = "Obtaining health care", 
+                                   Q2E5_ = "Accessing emergency svs", 
+                                   Q2E6_ = "Nutrition and diet", 
+                                   Q2E7_ = "Physical fitness", 
+                                   Q2E8_ = "Emotional well-being", 
+                                   Q2F1_ = "Social skills", 
+                                   Q2F2_ = "Recreation/Leisure", 
+                                   Q2F3_ = "Socializing outside", 
+                                   Q2F4_ = "Friendship", 
+                                   Q2F5_ = "Intimate relationships", 
+                                   Q2F6_ = "Socializing at home", 
+                                   Q2F7_ = "Communicating needs", 
+                                   Q2F8_ = "Volunteering", 
+                                   Q3A1_ = "Self-advocacy", 
+                                   Q3A2_ = "Decision making", 
+                                   Q3A3_ = "Avoiding exploitation", 
+                                   Q3A4_ = "Civic responsibility", 
+                                   Q3A5_ = "Advocacy participation", 
+                                   Q3A6_ = "Legal services", 
+                                   Q3A7_ = "Financial management", 
+                                   Q3A8_ = "Advocating for others", 
+                                   Q4A1v1 = "High medical staffing", 
+                                   Q4A2v1 = "High behavioral with conviction",
+                                   Q4A3v1 = "High behavioral w/o conviction", 
+                                   Q4A4v1 = "High suicide risk"),
+         item_long = dplyr::recode(item,
+                                   Q1A1_ = "Inhalation or oxygen therapy", 
+                                   Q1A2_ = "Postural drainage", 
+                                   Q1A3_ = "Chest PT", 
+                                   Q1A4_ = "Suctioning", 
+                                   Q1A5_ = "Oral Stimulation or jaw positioning", 
+                                   Q1A6_ = "Tube feeding (e.g. nasogastric)", 
+                                   Q1A7_ = "Parenteral feeding (e.g. IV)", 
+                                   Q1A8_ = "Turning or positioning", 
+                                   Q1A9_ = "Dressing of open wound(s)", 
+                                   Q1A10_ = "Protection from infectious diseases due to immune system", 
+                                   Q1A11_ = "Seizure management",
+                                   Q1A12_ = "Dialysis", 
+                                   Q1A13_ = "Ostomy Care", 
+                                   Q1A14_ = "Lifting and/or transferring", 
+                                   Q1A15_ = "Therapy services", 
+                                   Q1A16_ = "Hypertension",
+                                   Q1A17_ = "Allergies",
+                                   Q1A18_ = "Diabetes",
+                                   Q1A19_ = "Other Medical (1st)",
+                                   Q1A20_ = "Other Medical (2nd)",
+                                   Q1A21_ = "Other Medical (3rd)",
+                                   Q1B1_ = "Prevention of assaults or injuries to others", 
+                                   Q1B2_ = "Prevention of property destruction (e.g. fire setting, breaking furniture)",
+                                   Q1B3_ = "Prevention of stealing", 
+                                   Q1B4_ = "Prevention of self-injury", 
+                                   Q1B5_ = "Prevention of pica ingestion of inedible substances", 
+                                   Q1B6_ = "Prevention of suicide attempts", 
+                                   Q1B7_ = "Prevention of sexual aggression", 
+                                   Q1B8_ = "Prevention of nonaggressive, but inapproppriate sexual behavior (e.g. exposes self in public, exhibitionism, inappropriate touching or gesturing)", 
+                                   Q1B9_ = "Prevention of emotional outbursts", 
+                                   Q1B10_ = "Prevention of wandering",
+                                   Q1B11_ = "Prevention of substance abuse",
+                                   Q1B12_ = "Maintaining mental health treatments",
+                                   Q1B13_ = "Other Behavioral (1st)",
+                                   Q1B14_ = "Other Behavioral (2nd)",
+                                   Q1B15_ = "Other Behavioral (3rd)",
+                                   Q2A1_ = "Operating home appliances/electronics", 
+                                   Q2A2_ = "Bathing and taking care of personal hygiene and grooming needs", 
+                                   Q2A3_ = "Using the toilet", 
+                                   Q2A4_ = "Dressing", 
+                                   Q2A5_ = "Preparing food", 
+                                   Q2A6_ = "Eating Food", 
+                                   Q2A7_ = "Taking care of clothes (includes laundering)", 
+                                   Q2A8_ = "Housekeeping and cleaning", 
+                                   Q2B1_ = "Getting from place to place throughout the community", 
+                                   Q2B2_ = "Participating in recreation/leisure activities in the community settings", 
+                                   Q2B3_ = "Participating in preferred community activities (church, volunteer, etc.)", 
+                                   Q2B4_ = "Accessing public buildings and settings", 
+                                   Q2B5_ = "Using public services in the community", 
+                                   Q2B6_ = "Shopping and purchasing goods and services", 
+                                   Q2B7_ = "Interacting with community members", 
+                                   Q2B8_ = "Going to visit friends and family", 
+                                   Q2C1_ = "Learning and using problem-solving strategies", 
+                                   Q2C2_ = "Learning functional academics (reading signs, counting change, etc.)", 
+                                   Q2C3_ = "Learning health and physical education skills", 
+                                   Q2C4_ = "Learning self-determination skills", 
+                                   Q2C5_ = "Learning self-management strategies", 
+                                   Q2C6_ = "Participating in training/educational decisions", 
+                                   Q2C7_ = "Accessing training/educational settings", 
+                                   Q2C8_ = "Interacting with others in learning activities", 
+                                   Q2C9_ = "Using technology for learning", 
+                                   Q2D1_ = "Learning and using specific job skills", 
+                                   Q2D2_ = "Accessing/receiving job/task accommodations", 
+                                   Q2D3_ = "Interacting with coworkers", 
+                                   Q2D4_ = "Interacting with supervisors/coaches", 
+                                   Q2D5_ = "Completing work-related tasks with acceptable speed", 
+                                   Q2D6_ = "Completing work-related tasks with acceptable quality", 
+                                   Q2D7_ = "Changing job assignments", 
+                                   Q2D8_ = "Seeking information and assistance from an employer", 
+                                   Q2E1_ = "Taking medications", 
+                                   Q2E2_ = "Ambulating and moving about", 
+                                   Q2E3_ = "Avoiding health and safety hazards", 
+                                   Q2E4_ = "Obtaining health care services", 
+                                   Q2E5_ = "Learning how to access emergency services", 
+                                   Q2E6_ = "Maintaining nutritious diet", 
+                                   Q2E7_ = "Maintaining physical health and fitness", 
+                                   Q2E8_ = "Maintaining emotional well-being", 
+                                   Q2F1_ = "Using appropriate social skills", 
+                                   Q2F2_ = "Participating in recreation/leisure activities with others", 
+                                   Q2F3_ = "Socializing outside the household", 
+                                   Q2F4_ = "Making and keeping friends", 
+                                   Q2F5_ = "Engaging in loving and intimate relationships", 
+                                   Q2F6_ = "Socializing within the household", 
+                                   Q2F7_ = "Communicating with others about personal needs", 
+                                   Q2F8_ = "Engaging in volunteer work", 
+                                   Q3A1_ = "Advocating for self", 
+                                   Q3A2_ = "Making choices and decisions", 
+                                   Q3A3_ = "Protecting self from exploitation", 
+                                   Q3A4_ = "Exercising legal/civic responsibilities", 
+                                   Q3A5_ = "Belonging to and participating in self-advocacy/support organizations", 
+                                   Q3A6_ = "Obtaining legal services", 
+                                   Q3A7_ = "Managing money and personal finances", 
+                                   Q3A8_ = "Advocating for others", 
+                                   Q4A1v1 = "The Individual requires exceptionally high levels of staff support to address severe medical risks related to inhalation or oxygen therapy; postural drainage; chest PT, suctioning; oral stimulation and/or jaw positioning; tube feeding; parenteral feeding; skin care turning or positioning; skin care dressing of open wounds; protection from infectious diseases due to immune system impairment; seizure management; dialysis; ostomy care; medically-related lifting and/or transferring; therapy services, and/or other critical medical supports", 
+                                   Q4A2v1 = "The Individual is currently a severe community safety risk to others related to actual or attempted assault and/or injury to others; property destruction due to fire setting and/or arson; and/or sexual aggression and has been convicted of a crime related to these risks?",
+                                   Q4A3v1 = "The Indvidual is currently a severe community safety risk to others related to actual or attempted assault and/or injury to others; property destruction due to fire setting and/or arson; and/or sexual aggression and has not been convicted of a crime related to these risks?", 
+                                   Q4A4v1 = "The Individual displays self-directed destructiveness related to self-injury; pica; and/or suicide attempts which seriously threatens their own health and/or safety?"),
+         qol = dplyr::recode(item,
+                             Q1A1_ = "Physical Wellbeing", 
+                             Q1A2_ = "Physical Wellbeing", 
+                             Q1A3_ = "Physical Wellbeing", 
+                             Q1A4_ = "Physical Wellbeing", 
+                             Q1A5_ = "Physical Wellbeing", 
+                             Q1A6_ = "Physical Wellbeing", 
+                             Q1A7_ = "Physical Wellbeing", 
+                             Q1A8_ = "Physical Wellbeing", 
+                             Q1A9_ = "Physical Wellbeing", 
+                             Q1A10_ = "Physical Wellbeing", 
+                             Q1A11_ = "Physical Wellbeing",
+                             Q1A12_ = "Physical Wellbeing", 
+                             Q1A13_ = "Physical Wellbeing", 
+                             Q1A14_ = "Physical Wellbeing", 
+                             Q1A15_ = "Physical Wellbeing", 
+                             Q1A16_ = "Physical Wellbeing",
+                             Q1A17_ = "Physical Wellbeing",
+                             Q1A18_ = "Physical Wellbeing",
+                             Q1A19_ = "Physical Wellbeing",
+                             Q1A20_ = "Physical Wellbeing",
+                             Q1A21_ = "Physical Wellbeing",
+                             Q1B1_ = "Emotional Wellbeing", 
+                             Q1B2_ = "Emotional Wellbeing",
+                             Q1B3_ = "Emotional Wellbeing", 
+                             Q1B4_ = "Emotional Wellbeing", 
+                             Q1B5_ = "Emotional Wellbeing", 
+                             Q1B6_ = "Emotional Wellbeing", 
+                             Q1B7_ = "Emotional Wellbeing", 
+                             Q1B8_ = "Emotional Wellbeing",
+                             Q1B10_ = "Emotional Wellbeing",
+                             Q1B11_ = "Emotional Wellbeing",
+                             Q1B12_ = "Emotional Wellbeing",
+                             Q1B13_ = "Emotional Wellbeing",
+                             Q1B14_ = "Emotional Wellbeing",
+                             Q1B15_ = "Emotional Wellbeing",
+                             Q2A1_ = "Physical Wellbeing",
+                             Q2A2_ = "Physical Wellbeing",
+                             Q2A3_ = "Physical Wellbeing",
+                             Q2A4_ = "Physical Wellbeing",
+                             Q2A5_ = "Physical Wellbeing",
+                             Q2A6_ = "Physical Wellbeing",
+                             Q2A7_ = "Physical Wellbeing",
+                             Q2A8_ = "Physical Wellbeing",
+                             Q2B1_ = "Social Inclusion",
+                             Q2B2_ = "Social Inclusion",
+                             Q2B3_ = "Social Inclusion",
+                             Q2B4_ = "Social Inclusion",
+                             Q2B5_ = "Social Inclusion",
+                             Q2B6_ = "Social Inclusion",
+                             Q2B7_ = "Social Inclusion",
+                             Q2B8_ = "Interpersonal Relations",
+                             Q2C1_ = "Personal Development",
+                             Q2C2_ = "Personal Development",
+                             Q2C3_ = "Physical Wellbeing",
+                             Q2C4_ = "Self Determination",
+                             Q2C5_ = "Personal Development",
+                             Q2C6_ = "Personal Development",
+                             Q2C7_ = "Personal Development",
+                             Q2C8_ = "Social Inclusion",
+                             Q2C9_ = "Personal Development",
+                             Q2D1_ = "Material Wellbeing",
+                             Q2D2_ = "Material Wellbeing",
+                             Q2D3_ = "Material Wellbeing",
+                             Q2D4_ = "Material Wellbeing",
+                             Q2D5_ = "Material Wellbeing",
+                             Q2D6_ = "Material Wellbeing",
+                             Q2D7_ = "Material Wellbeing",
+                             Q2D8_ = "Material Wellbeing",
+                             Q2E1_ = "Physical Wellbeing",
+                             Q2E2_ = "Physical Wellbeing",
+                             Q2E3_ = "Physical Wellbeing",
+                             Q2E4_ = "Physical Wellbeing",
+                             Q2E5_ = "Physical Wellbeing",
+                             Q2E6_ = "Personal Development",
+                             Q2E7_ = "Personal Development",
+                             Q2E8_ = "Emotional Wellbeing",
+                             Q2F1_ = "Interpersonal Relations",
+                             Q2F2_ = "Interpersonal Relation",
+                             Q2F3_ = "Interpersonal Relation",
+                             Q2F4_ = "Interpersonal Relation",
+                             Q2F5_ = "Interpersonal Relations",
+                             Q2F6_ = "Interpersonal Relations",
+                             Q2F7_ = "Self Determination",
+                             Q2F8_ = "Social Inclusion",
+                             Q3A1_ = "Rights",
+                             Q3A2_ = "Self Determination",
+                             Q3A3_ = "Rights",
+                             Q3A4_ = "Rights",
+                             Q3A5_ = "Social Inclusion",
+                             Q3A6_ = "Rights",
+                             Q3A7_ = "Self Determination",
+                             Q3A8_ = "Rights",
+                             Q4A1v1 = "Physical Wellbeing",
+                             Q4A2v1 = "Emotional Wellbeing",
+                             Q4A3v1 = "Emotional Wellbeing",
+                             Q4A4v1 = "Emotional Wellbeing")
          ) %>%
   filter(is.na(item) == F) %>%
   group_by(section, section_desc, item, item_desc, qol) %>%
   summarize(n = n()) %>%
   filter(n > 1) %>% # Remove notes and other extraneous fields
   # Flag necessary services (i.e. high risk)
-  mutate(need_svc = item %in% c("s1a_1_","s1a_2_","s1a_3_","s1a_4_",
-                                "s1a_5_","s1a_6_","s1a_7_","s1a_8_",
-                                "s1b_1_","s1b_6_","s1b_7_","s1b_8_",
-                                "s1e_1_","s1e_2_","s1e_3_","s1e_4_",
-                                "s1e_5_","s3a_1_","s3a_10_","s3a_11_",
-                                "s3a_12_","s3a_13_","s3a_14_","s3a_15_",
-                                "s3a_16_","s3a_2_","s3a_3_","s3a_4_",
-                                "s3a_5_","s3a_6_","s3a_7_","s3a_8_",
-                                "s3a_9_","s3b_1_","s3b_10_","s3b_11_",
-                                "s3b_12_","s3b_13_","s3b_2_","s3b_4_",
-                                "s3b_6_","s3b_7_","s3b_8_","s3b_9_"),
-         refer_ot = item %in% c("s1a_1_","s1a_2_","s1a_3_","s1a_4_",
-                                "s1a_5_","s1a_6_","s1a_7_","s1b_2_",
-                                "s1e_7_"),
-         refer_nurs = item %in% c("s1e_1_","s3a_1_","s3a_10_","s3a_11_",
-                                  "s3a_12_","s3a_13_","s3a_16_","s3a_2_",
-                                  "s3a_3_","s3a_4_","s3a_9_"),
-         refer_sp = item %in% c("s3a_5_","s3a_6_","s3a_7_"),
-         refer_pt = item %in% c("s3a_2_","s3a_3_","s1e_7_","s1b_1_",
-                                "s1b_8_","s1e_4_","s3a_14_","s3a_8_"),
-         refer_diet = item %in% c("s1a_3_","s1a_4_","s1e_6_")
+  mutate(need_svc = item %in% c("Q2A1_","Q2A2_","Q2A3_","Q2A4_",
+                                "Q2A5_","Q2A6_","Q2A7_","Q2A8_",
+                                "Q2B1_","Q2B4_","Q2B6_","Q2B7_",
+                                "Q2E1_","Q2E2_","Q2E3_","Q2E4_","Q2E5_",
+                                "Q1A1_","Q1A2_","Q1A3_","Q1A4_","Q1A5_", 
+                                "Q1A6_","Q1A7_","Q1A8_","Q1A9_","Q1A10_", 
+                                "Q1A11_","Q1A12_","Q1A13_","Q1A14_","Q1A15_", 
+                                "Q1A16_","Q1A17_","Q1A18_",
+                                "Q1B1_","Q1B2_","Q1B3_","Q1B4_","Q1B5_",
+                                "Q1B6_","Q1B7_","Q1B12_","Q1B13_"),
+         refer_ot = item %in% c("Q2A1_","Q2A2_","Q2A3_","Q2A4_",
+                                "Q2A5_","Q2A6_","Q2A7_","Q2A8_",
+                                "Q2B2_","Q2B7_"),
+         refer_nurs = item %in% c("Q2E1_","Q1A1_","Q1A2_","Q1A3_","Q1A4_",
+                                  "Q1A9_","Q1A10_","Q1A11_","Q1A12_","Q1A13_",
+                                  "Q1A19_","Q1A16_","Q1A17_","Q1A18_"),
+         refer_sp = item %in% c("Q1A5_","Q1A6_","Q1A7_"),
+         refer_pt = item %in% c("Q1A2_","Q1A3_","Q2E7_","Q2B1_",
+                                "Q2B4_","Q2E2_","Q1A14_","Q1A8_"),
+         refer_diet = item %in% c("Q2A5_","Q2A6_","Q2E6_")
   ) 
 
 # Write to file
@@ -274,223 +394,226 @@ library(magrittr)
 # Match each need item to all possible services that could be used to address need
 
 needs_matrix %<>%
-  mutate(s1a_1_ = Code %in% c("H2015","H2016","H0043",
+  mutate(Q2A3_ = Code %in% c("H2015","H2016","H0043",
                               "H0045","S5150","S5151","T1005",
                               "T1020"), # Toilet
-         s1a_2_ = Code %in% c("H2015","H2016","H0043",
+         Q2A7_ = Code %in% c("H2015","H2016","H0043",
                               "H0045","S5150","S5151","T1005",
                               "T1020"), # Clothes
-         s1a_3_ = Code %in% c("H2015","H2016","H0043",
+         Q2A5_ = Code %in% c("H2015","H2016","H0043",
                               "H0045","S5150","S5151","T1005",
                               "T1020"), # Preparing food
-         s1a_4_ = Code %in% c("H2015","H2016","H0043",
+         Q2A6_ = Code %in% c("H2015","H2016","H0043",
                               "H0045","S5150","S5151","T1005",
                               "T1020",
                               "92610","92507","92526"), # Eating food
-         s1a_5_ = Code %in% c("H2015","H2016",
+         Q2A8_ = Code %in% c("H2015","H2016",
                               "T1020",
                               "S5165","E1399","T2028","T2029"), # Housekeeping
-         s1a_6_ = Code %in% c("H2015","H2016","H0043",
+         Q2A4_ = Code %in% c("H2015","H2016","H0043",
                               "H0045","S5150","S5151","T1005",
                               "T1020"), # Dressing
-         s1a_7_ = Code %in% c("H2015","H2016","H0043",
+         Q2A2_ = Code %in% c("H2015","H2016","H0043",
                               "H0045","S5150","S5151","T1005",
                               "T1020"), # Hygiene
-         s1a_8_ = Code %in% c("H2015","H2016","H0043",
+         Q2A1_ = Code %in% c("H2015","H2016","H0043",
                               "H0045","S5150","S5151","T1005",
                               "T1020",
                               "H0043"), # Appliances
-         s1b_1_ = Code %in% c("H2015","H2016","H0043",
+         Q2B1_ = Code %in% c("H2015","H2016","H0043",
                               "T1020",
                               "T5999"), # Getting Around
-         s1b_2_ = Code %in% c("H2015","H2016","H0043"), # Recreation
-         s1b_3_ = Code %in% c("H2015","H2016","H0043"), # Public Services
-         s1b_4_ = Code %in% c("H2015","H2016","H0043"), # Visit Friends/Family
-         s1b_5_ = Code %in% c("H2015","H2016","H0043"), # Preferred Activities
-         s1b_6_ = Code %in% c("H2015","H2016","H0043"), # Shopping
-         s1b_7_ = Code %in% c("H2015","H2016","H0043"), # Community interaction
-         s1b_8_ = Code %in% c("H2015","H2016","H0043"), # Accessing Settings
-         s1c_1_ = Code %in% c("H2015","H2016","H0043",
+         Q2B2_ = Code %in% c("H2015","H2016","H0043"), # Recreation
+         Q2B5_ = Code %in% c("H2015","H2016","H0043"), # Public Services
+         Q2B8_ = Code %in% c("H2015","H2016","H0043"), # Visit Friends/Family
+         Q2B3_ = Code %in% c("H2015","H2016","H0043"), # Preferred Activities
+         Q2B6_ = Code %in% c("H2015","H2016","H0043"), # Shopping
+         Q2B7_ = Code %in% c("H2015","H2016","H0043"), # Community interaction
+         Q2B4_ = Code %in% c("H2015","H2016","H0043"), # Accessing Settings
+         Q2C8_ = Code %in% c("H2015","H2016","H0043",
                               "H2019","S5108","S5111"), # Learning interaction
-         s1c_2_ = Code %in% c("H2015","H2016","H0043",
+         Q2C6_ = Code %in% c("H2015","H2016","H0043",
                               "T1016","T1017",
                               "T2025"), # Learning decisions
-         s1c_3_ = Code %in% c("H2015","H2016","H0043",
+         Q2C1_ = Code %in% c("H2015","H2016","H0043",
                               "T1016","T1017"), # Problem solving
-         s1c_4_ = Code %in% c("H2015","H2016","H0043",
+         Q2C9_ = Code %in% c("H2015","H2016","H0043",
                               "T1016","T1017"), # Using technology
-         s1c_5_ = Code %in% c("H2015","H2016","H0043",
+         Q2C7_ = Code %in% c("H2015","H2016","H0043",
                               "T1016","T1017"), # Accessing training
-         s1c_6_ = Code %in% c("H2015","H2016","H0043",
+         Q2C2_ = Code %in% c("H2015","H2016","H0043",
                               "T1016","T1017"), # Academics
-         s1c_7_ = Code %in% c("H2015","H2016","H0043",
+         Q2C3_ = Code %in% c("H2015","H2016","H0043",
                               "T1016","T1017",
                               "S9445","S9446"), # Learning health skills
-         s1c_8_ = Code %in% c("T1016","T1017",
+         Q2C4_ = Code %in% c("T1016","T1017",
                               "T2025"), # Learning self-determination
-         s1c_9_ = Code %in% c("H2015","H2016","H0043",
+         Q2C5_ = Code %in% c("H2015","H2016","H0043",
                               "T1016","T1017"), # Learning self-management
-         s1d_1_ = Code %in% c("H2015","H2016","H0043",
+         Q2D2_ = Code %in% c("H2015","H2016","H0043",
                               "T1016","T1017",
                               "H2023","H2014"), # Job accomodations
-         s1d_2_ = Code %in% c("H2015","H2016","H0043",
+         Q2D1_ = Code %in% c("H2015","H2016","H0043",
                               "T1016","T1017",
                               "H2023","H2014"), # Specific job skills
-         s1d_3_ = Code %in% c("H2015","H2016","H0043",
+         Q2D3_ = Code %in% c("H2015","H2016","H0043",
                               "T1016","T1017",
                               "H2023","H2014"), # Co-worker interaction
-         s1d_4_ = Code %in% c("H2015","H2016","H0043",
+         Q2D4_ = Code %in% c("H2015","H2016","H0043",
                               "T1016","T1017",
                               "H2023","H2014"), # Supervisor interaction
-         s1d_5_ = Code %in% c("H2015","H2016","H0043",
+         Q2D5_ = Code %in% c("H2015","H2016","H0043",
                               "T1016","T1017",
                               "H2023","H2014"), # Work speed
-         s1d_6_ = Code %in% c("H2015","H2016","H0043",
+         Q2D6_ = Code %in% c("H2015","H2016","H0043",
                               "T1016","T1017",
                               "H2023","H2014"), # Work quality
-         s1d_7_ = Code %in% c("H2015","H2016","H0043",
+         Q2D7_ = Code %in% c("H2015","H2016","H0043",
                               "T1016","T1017",
                               "H2023","H2014"), # Changing assignments
-         s1d_8_ = Code %in% c("H2015","H2016","H0043",
+         Q2D8_ = Code %in% c("H2015","H2016","H0043",
                               "T1016","T1017",
                               "H2023","H2014"), # Seeking assistance
-         s1e_1_ = Code %in% c("H2015","H2016","H0043",
+         Q2E1_ = Code %in% c("H2015","H2016","H0043",
                               "T1001","T1002","H0034",
                               "T1999",
                               "99506","99211","96372"), # Taking medications
-         s1e_2_ = Code %in% c("H2000","S5160","S5161"), # Avoiding hazards
-         s1e_3_ = Code %in% c("H2015","H2016","H0043",
+         Q2E3_ = Code %in% c("H2000","S5160","S5161"), # Avoiding hazards
+         Q2E4_ = Code %in% c("H2015","H2016","H0043",
                               "T1016","T1017",
                               "S9445","S9446"), # Obtaining health care
-         s1e_4_ = Code %in% c("T2028","T2029","S5199","E1399","T2039",
+         Q2E2_ = Code %in% c("T2028","T2029","S5199","E1399","T2039",
                               "97110","97112","97113","97116","97124",
                               "97140","97530","97532","97533","97535", 
                               "97537","97542","S8990","97750","97755",
                               "97760","97762","97150","97001","97002",
                               "97003","97004"), # Moving about
-         s1e_5_ = Code %in% c("S5160","S5161"), # Accessing emergency svs
-         s1e_6_ = Code %in% c("97802","97803","97804",
+         Q2E5_ = Code %in% c("S5160","S5161"), # Accessing emergency svs
+         Q2E6_ = Code %in% c("97802","97803","97804",
                               "S9470"), # Nutritional diet
-         s1e_7_ = Code %in% c("97110","97112","97113","97116","97124",
+         Q2E7_ = Code %in% c("97110","97112","97113","97116","97124",
                               "97140","97530","97532","97533","97535", 
                               "97537","97542","S8990","97750","97755",
                               "97760","97762","97150","97001","97002",
                               "97003","97004",
                               "T5999"), # Physical fitness
-         s1e_8_ = Code %in% c("T1016","T1017",
+         Q2E8_ = Code %in% c("T1016","T1017",
                               "90837","90832","90834","90833","90836","90838"), # Emotional well-being
-         s1f_1_ = Code %in% c("H2015","H2016","H0043",
+         Q2F6_ = Code %in% c("H2015","H2016","H0043",
                               "H2019","S5108","S5111",
                               "H2030",
                               "H0023","H0038","H0046",
                               "H2014"), # Socializing in home
-         s1f_2_ = Code %in% c("H2015","H2016","H0043",
+         Q2F2_ = Code %in% c("H2015","H2016","H0043",
                               "H2019","S5108","S5111",
                               "H2030",
                               "H0023","H0038","H0046",
                               "H2014"), # Recreation with others
-         s1f_3_ = Code %in% c("H2015","H2016","H0043",
+         Q2F3_ = Code %in% c("H2015","H2016","H0043",
                               "H2019","S5108","S5111",
                               "H2030",
                               "H0023","H0038","H0046",
                               "H2014"), # Socializing out of home
-         s1f_4_ = Code %in% c(""), # Making friends
-         s1f_5_ = Code %in% c("T2039"), # Communicating with helpers
-         s1f_6_ = Code %in% c("H2015","H2016","H0043"), # Appropriate social skills
-         s1f_7_ = Code %in% c(""), # Intimate relationships
-         s1f_8_ = Code %in% c("H2015","H2016","H0043",
+         Q2F4_ = Code %in% c(""), # Making friends
+         Q2F7_ = Code %in% c("T2039"), # Communicating with helpers
+         Q2F1_ = Code %in% c("H2015","H2016","H0043"), # Appropriate social skills
+         Q2F5_ = Code %in% c(""), # Intimate relationships
+         Q2F8_ = Code %in% c("H2015","H2016","H0043",
                               "H2014","T2015"), # Volunteer work
-         s2_1_ = Code %in% c("T1016","T1017",
+         Q3A1_ = Code %in% c("T1016","T1017",
                              "H0023","H0038","H0046"), # Self-advocacy
-         s2_2_ = Code %in% c("H2015","H2016","H0043",
+         Q3A7_ = Code %in% c("H2015","H2016","H0043",
                              "T1016","T1017",
                              "T2025"), # Money management
-         s2_3_ = Code %in% c("T1016","T1017"), # Exploited by others
-         s2_4_ = Code %in% c("T1016","T1017"), # Legal responsibility
-         s2_5_ = Code %in% c("H2015","H2016","H0043",
+         Q3A3_ = Code %in% c("T1016","T1017"), # Exploited by others
+         Q3A4_ = Code %in% c("T1016","T1017"), # Legal responsibility
+         Q3A5_ = Code %in% c("H2015","H2016","H0043",
                              "T1016","T1017"), # Participation
-         s2_6_ = Code %in% c("T1016","T1017"), # Legal services
-         s2_7_ = Code %in% c("H2015","H2016","H0043",
+         Q3A6_ = Code %in% c("T1016","T1017"), # Legal services
+         Q3A2_ = Code %in% c("H2015","H2016","H0043",
                              "T1016","T1017",
                              "T2025"), # Decision making
-         s2_8_ = Code %in% c("H2015","H2016","H0043",
+         Q3A8_ = Code %in% c("H2015","H2016","H0043",
                              "T1016","T1017"), # Other advocacy
-         s3a_1_ = Code %in% c("H2015","H2016","H0043",
+         Q1A1_ = Code %in% c("H2015","H2016","H0043",
                               "T1001","T1002","H0034",
                               "S9123","S9124","T1000",
                               "T1020"), # Oxygen therapy
-         s3a_10_ = Code %in% c("H2015","H2016","H0043",
+         Q1A10_ = Code %in% c("H2015","H2016","H0043",
                                "T1001","T1002","H0034",
                                "T1020"), # Prevent infection
-         s3a_11_ = Code %in% c("H2015","H2016","H0043",
+         Q1A11_ = Code %in% c("H2015","H2016","H0043",
                                "T1001","T1002","H0034",
                                "S9123","S9124","T1000",
                                "T1020"), # Seizure mgmt
-         s3a_12_ = Code %in% c("T1001","T1002","H0034",
+         Q1A12_ = Code %in% c("T1001","T1002","H0034",
                                "S9123","S9124","T1000"), # Dialysis
-         s3a_13_ = Code %in% c("H2015","H2016","H0043",
+         Q1A13_ = Code %in% c("H2015","H2016","H0043",
                                "T1001","T1002","H0034",
                                "S9123","S9124","T1000",
                                "T1020"), # Ostomy care
-         s3a_14_ = Code %in% c("H2015","H2016","H0043",
+         Q1A14_ = Code %in% c("H2015","H2016","H0043",
                                "T1001","T1002","H0034",
                                "S9123","S9124","T1000",
                                "T1020"), # Transfers
-         s3a_15_ = Code %in% c("H2015","H2016","H0043",
+         Q1A15_ = Code %in% c("H2015","H2016","H0043",
                                "T1001","T1002","H0034",
                                "S9123","S9124","T1000",
                                "T1020"), # Therapy svs
-         s3a_16_ = Code %in% c(""), # Other medical
-         s3a_2_ = Code %in% c("T1001","T1002","H0034",
+         Q1A19_ = Code %in% c(""), # Other medical
+         Q1A2_ = Code %in% c("T1001","T1002","H0034",
                               "S9123","S9124","T1000",
                               "T1020"), # Postural drainage
-         s3a_3_ = Code %in% c("H2015","H2016","H0043",
+         Q1A3_ = Code %in% c("H2015","H2016","H0043",
                               "T1001","T1002","H0034",
                               "S9123","S9124","T1000",
                               "T1020"), # Chest PT
-         s3a_4_ = Code %in% c("H2015","H2016","H0043",
+         Q1A4_ = Code %in% c("H2015","H2016","H0043",
                               "T1001","T1002","H0034",
                               "S9123","S9124","T1000",
                               "T1020"), # Suctioning
-         s3a_5_ = Code %in% c("H2015","H2016","H0043",
+         Q1A5_ = Code %in% c("H2015","H2016","H0043",
                               "T1001","T1002","H0034",
                               "S9123","S9124","T1000",
                               "T1020"), # Oral stimulation
-         s3a_6_ = Code %in% c("H2015","H2016","H0043",
+         Q1A6_ = Code %in% c("H2015","H2016","H0043",
                               "T1001","T1002","H0034",
                               "S9123","S9124","T1000",
                               "T1020"), # Tube feeding
-         s3a_7_ = Code %in% c("H2015","H2016","H0043",
+         Q1A7_ = Code %in% c("H2015","H2016","H0043",
                               "T1001","T1002","H0034",
                               "S9123","S9124","T1000",
                               "T1020"), # Parental feeding
-         s3a_8_ = Code %in% c("H2015","H2016","H0043",
+         Q1A8_ = Code %in% c("H2015","H2016","H0043",
                               "T1001","T1002","H0034",
                               "S9123","S9124","T1000",
                               "T1020"), # Positioning
-         s3a_9_ = Code %in% c("H2015","H2016","H0043",
+         Q1A9_ = Code %in% c("H2015","H2016","H0043",
                               "T1001","T1002","H0034",
                               "S9123","S9124","T1000",
                               "T1020"), # Dressing wounds
-         s3b_1_ = Code %in% c("90837","90832","90834","90833","90836","90838",
+         Q1A16_ = Code %in% c(""), # Hypertension
+         Q1A17_ = Code %in% c(""), # Allergies
+         Q1A18_ = Code %in% c(""), # Diabetes
+         Q1B2_ = Code %in% c("90837","90832","90834","90833","90836","90838",
                               "H2019","S5108","S5111",
                               "H2000",
                               "T1020"), # Assault
-         s3b_10_ = Code %in% c("H2019","S5108","S5111"), # Wandering
-         s3b_11_ = Code %in% c("T1016","T1017"), # Substance abuse
-         s3b_12_ = Code %in% c("T1016","T1017"), # Mental health tx
-         s3b_13_ = Code %in% c(""), # Other behavioral
-         s3b_2_ = Code %in% c("H2019","S5108","S5111"), # Property destruction
-         s3b_3_ = Code %in% c(""), # Stealing
-         s3b_4_ = Code %in% c("H2019","S5108","S5111"), # Self injury
-         s3b_5_ = Code %in% c(""), # Pica
-         s3b_6_ = Code %in% c(""), # Suicide attempts
-         s3b_7_ = Code %in% c("H2019","S5108","S5111"), # Sexual aggression
-         s3b_8_ = Code %in% c("H2019","S5108","S5111"), # Inappropriate
-         s3b_9_ = Code %in% c("") # Outbursts
+         Q1B11_ = Code %in% c("H2019","S5108","S5111"), # Wandering
+         Q1B10_ = Code %in% c("T1016","T1017"), # Substance abuse
+         Q1B12_ = Code %in% c("T1016","T1017"), # Mental health tx
+         Q1B13_ = Code %in% c(""), # Other behavioral
+         Q1B3_ = Code %in% c("H2019","S5108","S5111"), # Property destruction
+         Q1B4_ = Code %in% c(""), # Stealing
+         Q1B5_ = Code %in% c("H2019","S5108","S5111"), # Self injury
+         Q1B7_ = Code %in% c(""), # Pica
+         Q1B6_ = Code %in% c(""), # Suicide attempts
+         Q1B9_ = Code %in% c("H2019","S5108","S5111"), # Sexual aggression
+         Q1B8_ = Code %in% c("H2019","S5108","S5111"), # Inappropriate
+         Q1B1_ = Code %in% c("") # Outbursts
          ) %>%
   ungroup() %>%
-  select(Code, s1a_1_:s3b_9_) %>%
+  select(Code, Q1A1_:Q3A8_) %>%
   distinct()
 
 write.csv(needs_matrix, "data/needs_matrix.csv", row.names = F)

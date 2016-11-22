@@ -22,6 +22,8 @@ library(car)
       sub_sis %>%
       mutate(mcaid_id = as.character(mcaid_id)) %>%
       left_join(sis_key, by = "mcaid_id") %>%
-      select(-sis_id, -mcaid_id, -age, -gender)
+      select(-sis_id, -mcaid_id, -age, -gender, -address)
     
+  # Write SIS Key and Scrubbed data to local workspace
+    write.csv(sis_key,"data/sis_key.csv", row.names = F)
     write.csv(scrub_sis,"data/scrub_sis.csv", row.names = F)

@@ -12,14 +12,9 @@ dashboardPage(
         icon = icon("line-chart")
       ),
       menuItem(
-        "Support Needs", 
+        "Population Needs", 
         tabName = "support", 
         icon = icon("life-ring")
-      ),
-      menuItem(
-        "Protection", 
-        tabName = "protection", 
-        icon = icon("shield")
       ),
       menuItem(
         "Medical/Behavioral", 
@@ -97,7 +92,8 @@ dashboardPage(
                     "This calculates the number of unique clients interviewed in 
                     the selected date range as a percentage of the total clients 
                     currently meeting criteria for assessment", 
-                    em("(from QI file)"),
+                    em("(from encounter data indicating services were received 
+                       for a developmental disability diagnosis)"),
                     br(),
                     strong("Denominator: % of time elapsed"),
                     "This calculates the number of days between the first and last 
@@ -118,7 +114,8 @@ dashboardPage(
                     "This indicator calculates the number of unique clients 
                     interviewed in the selected date range as a percentage of the 
                     total clients currently meeting criteria for assessment",
-                    em("(from QI file)")),
+                    em("(from encounter data indicating services were received 
+                       for a developmental disability diagnosis)")),
                   p(
                     em("P.S.  This is exactly the same as the numerator of the"), 
                     strong("Completion Rate")
@@ -145,7 +142,9 @@ dashboardPage(
                     strong("Assessments Needed"),
                     "For this we need to get the total number of people needing 
                     assessments.  For this we take the number of total clients 
-                    meeting criteria for assessment", em("(from QI file)"), 
+                    meeting criteria for assessment", 
+                    em("(from encounter data indicating services were received 
+                       for a developmental disability diagnosis)"), 
                       "and subtract the number of people who have had assessments 
                     prior to the initial date in the date range selected.  We then 
                     divide the number of people needing assessments by the number 
@@ -339,14 +338,29 @@ dashboardPage(
                 width = NULL,
                 tabPanel(
                   "Distribution",
-                  radioButtons(
-                    "central",
-                    label = "Display:",
-                    choices = c("Mean", "Median"), 
-                    selected = "Mean",
-                    inline = T
-                  ),
-                  plotlyOutput("hist_sni")
+                  plotlyOutput("hist_sni"),
+                  br(),
+                  box(
+                    title = "Chart settings", 
+                    color = "black",
+                    collapsible = TRUE,
+                    collapsed = T,
+                    width = NULL,
+                    radioButtons(
+                      "central",
+                      label = "Display:",
+                      choices = c("Mean", "Median"), 
+                      selected = "Mean",
+                      inline = T
+                    ),
+                    sliderInput(
+                      "sni_bins", 
+                      "Number of bins:", 
+                      min = 1, 
+                      max = 30, 
+                      value = 10
+                    )
+                  )
                 ),
                 tabPanel(
                   "Normal?",
@@ -363,7 +377,7 @@ dashboardPage(
                     tabPanel(
                       "SIS Support Needs Scale",
                       p(
-                        "The Support Needs Scale (Section 1 of the SIS) consists 
+                        "The Support Needs Scale (Section 2 of the SIS) consists 
                         of 49 activities grouped into six domains: ",
                         em(
                           "Home Living, Community Living, Lifelong Learning, 
@@ -376,7 +390,7 @@ dashboardPage(
                       ),
                       p(
                         "The SIS also measures exceptional Medical and Behavioral 
-                        Support Needs, assessing 15 medical conditions and 12 
+                        Support Needs, assessing 18 medical conditions and 12 
                         problem behaviors. Since certain medical conditions and 
                         challenging behaviors may require additional support, 
                         these items indicate cases where the ", 
@@ -423,7 +437,7 @@ dashboardPage(
                       ),
                       p(
                         "A density plot (which is what the lines are called) can 
-                        be tricky to explain.  You can think of it as a smoothed 
+                        be tricky to understand  You can think of it as a smoothed 
                         out histogram.  The y-axis measurement ", em("Density"),
                         " is also different.  It boils down to this: the area 
                         under the entire curve is 1, and the probability of a 
@@ -469,25 +483,26 @@ dashboardPage(
           column(
             width = 6,
             box(
-              title = "Type of Service", 
+              title = "Types of Need (Section 2: Supports)", 
               status = "warning",
-              collapsible = TRUE, 
+              collapsible = TRUE,
+              collapsed = F,
               width = NULL,
               selectInput(
-                "select_area_s1",
+                "select_area_q2",
                 label = "Select life area:",
-                choices = c("All", levels(as.factor(s1$section_desc)))
+                choices = c("All", levels(as.factor(q2$section_desc)))
               ),
               tabBox(
                 width = NULL,
                 tabPanel(
                   "Table",
-                  dataTableOutput("s1_dt")
+                  dataTableOutput("q2_dt")
                 ),
                 tabPanel(
                   "Chart",
-                  uiOutput('s1domain'),
-                  parsetOutput("tos_s1")
+                  uiOutput('q2domain'),
+                  parsetOutput("tos_q2")
                 ),
                 tabPanel(
                   "About",
@@ -568,7 +583,7 @@ dashboardPage(
                       br(),
                       strong("Type of Support"),
                       p(
-                        "When completing Section 1, the support needs for each 
+                        "When completing Section 2, the support needs for each 
                         activity addressed in the section are examined 
                         with regard to three measures of support need:",
                         br(),
@@ -612,30 +627,23 @@ dashboardPage(
                   )
                 )
               )
-            )
-          )
-        )
-      ),
-      tabItem(
-        tabName = "protection",
-        fluidRow(
-          column(
-            width = 6,
+            ),
             box(
-              title = "Type of Service", 
+              title = "Types of Need (Section 3: Protection)", 
               status = "warning",
               collapsible = TRUE, 
+              collapsed = TRUE,
               width = NULL,
               tabBox(
                 width = NULL,
                 tabPanel(
                   "Summary",
-                  dataTableOutput("s2_dt")
+                  dataTableOutput("q3_dt")
                 ),
                 tabPanel(
                   "Chart",
-                  uiOutput('s2domain'),
-                  parsetOutput("tos_s2")
+                  uiOutput('q3domain'),
+                  parsetOutput("tos_q3")
                 ),
                 tabPanel(
                   "About",
@@ -646,8 +654,9 @@ dashboardPage(
                       p(
                         "The table shows the average (", em("All"), 
                         ") and standard deviation (", em("StDev"),
-                        ") of raw scores for each item from the selected 
-                        section of the SIS.  The standard deviation can be used 
+                        ") of raw scores for each item from section 3 of the SIS,
+                        which addresses needs related to protection and advocacy.  
+                        The standard deviation can be used 
                         to look at items whose total score has the greatest 
                         amount of variation across assessments.  You can then 
                         explore potential causes of variation using the 
@@ -697,7 +706,7 @@ dashboardPage(
                           people needed full physical support on a monthly basis? 
                           How many minutes did they need it?"
                         )
-                      ),
+                        ),
                       p(
                         "When you click on", em("alpha"), " or ", em("size"), 
                         ", the chart sorts the variable alphabetically or by size.  
@@ -710,13 +719,13 @@ dashboardPage(
                         on the top, there will be one color from each type of 
                         support weaving down through the other variables."
                       )
-                    ),
+                      ),
                     tabPanel(
                       "The Data", 
                       br(),
                       strong("Type of Support"),
                       p(
-                        "When completing Section 2, the support needs for each 
+                        "When completing Section 3, the support needs for each 
                         activity related to protection and advocacy are examined 
                         with regard to three measures of support need:",
                         br(),
@@ -732,30 +741,30 @@ dashboardPage(
                         em("Type of Support:"), 
                         "The nature of support that would be needed by a person to 
                         engage in the activity in question."
-                      ),
-                      strong("Definitions"),
-                      p(
-                        "The chart uses short words and phrases for ease of use. 
-                        Here are the full definitions from the SIS tool itself ",
-                        a(
-                          href = "http://aaidd.org/docs/default-source/sis-docs/sisfrequencyandscoringclarifications.pdf?sfvrsn=2",
-                          "as defined by AAIDD"
-                        ),":",
-                        br(),
-                        em("Frequency:"),
-                        "Hourly = hourly or more frequently; 
-                        Daily = at least once a day but not once an hour; 
-                        Weekly = at least once a week, but not once a day; 
-                        Monthly = at least once a month, but not once a week; 
-                        None = none or less than monthly",
-                        br(),
-                        em("Daily Support Time (DST):"),
-                        "Over 4 hrs = 4 hours or more; 
-                        2-4 hrs = 2 hours to less than 4 hours; 
-                        Under 2 hrs = 30 minutes to less than 2 hours; 
-                        Under 30 min = less than 30 minutes; 
-                        None = None"
-                      )
+                    ),
+                    strong("Definitions"),
+                    p(
+                      "The chart uses short words and phrases for ease of use. 
+                      Here are the full definitions from the SIS tool itself ",
+                      a(
+                        href = "http://aaidd.org/docs/default-source/sis-docs/sisfrequencyandscoringclarifications.pdf?sfvrsn=2",
+                        "as defined by AAIDD"
+                      ),":",
+                      br(),
+                      em("Frequency:"),
+                      "Hourly = hourly or more frequently; 
+                      Daily = at least once a day but not once an hour; 
+                      Weekly = at least once a week, but not once a day; 
+                      Monthly = at least once a month, but not once a week; 
+                      None = none or less than monthly",
+                      br(),
+                      em("Daily Support Time (DST):"),
+                      "Over 4 hrs = 4 hours or more; 
+                      2-4 hrs = 2 hours to less than 4 hours; 
+                      Under 2 hrs = 30 minutes to less than 2 hours; 
+                      Under 30 min = less than 30 minutes; 
+                      None = None"
+                    )
                     )
                   )
                 )
@@ -779,8 +788,8 @@ dashboardPage(
                 selectInput(
                   "living",
                   label = NULL,
-                  choices = levels(unique(scrub_sis$LivingType)), 
-                  selected = levels(unique(scrub_sis$LivingType)), 
+                  choices = c(levels(unique(scrub_sis$LivingType)),"Not provided"), 
+                  selected = c(levels(unique(scrub_sis$LivingType)),"Not provided"), 
                   multiple = TRUE
                 )
               ),
@@ -830,14 +839,29 @@ dashboardPage(
                 width = NULL,
                 tabPanel(
                   "Distribution",
-                  radioButtons(
-                    "radio_mbhist",
-                    label = "Display:",
-                    choices = c("Medical", "Behavioral"), 
-                    selected = "Medical",
-                    inline = T
-                  ),
-                  plotlyOutput("hist_mb")
+                  plotlyOutput("hist_mb"),
+                  br(),
+                  box(
+                    title = "Chart settings", 
+                    color = "black",
+                    collapsible = TRUE,
+                    collapsed = T,
+                    width = NULL,
+                    radioButtons(
+                      "radio_mbhist",
+                      label = "Display:",
+                      choices = c("Medical", "Behavioral"), 
+                      selected = "Medical",
+                      inline = T
+                    ),
+                    sliderInput(
+                      "mb_bins", 
+                      "Number of bins:", 
+                      min = 1, 
+                      max = 30, 
+                      value = 10
+                    )
+                  )
                 ),
                 tabPanel(
                   "About",
@@ -890,12 +914,12 @@ dashboardPage(
                 ),
                 tabPanel(
                   "About",
-                  h4("Section 3 (a.k.a. Exceptional Medical and Behavioral Support Needs)"),
+                  h4("Section 1 (a.k.a. Exceptional Medical and Behavioral Support Needs)"),
                   p(
                     "Certain medical conditions and challenging behaviors are 
                     related to increased levels of support, regardless of 
                     support needs in other life areas. This section of the SIS 
-                    looks at 15 medical conditions and 13 problem behaviors 
+                    looks at 18 medical conditions and 13 problem behaviors 
                     commonly associated with intellectual disabilities. "
                   ),
                   h4("Scoring"),
@@ -1024,7 +1048,7 @@ dashboardPage(
           column(
             width = 12,
             box(
-              title = "Individual Recommendations",
+              title = "Individual Recommendations (In development)",
               status = "warning",
               collapsible = TRUE, 
               collapsed = TRUE,
@@ -1212,6 +1236,21 @@ dashboardPage(
                   )
                 ),
                 tabPanel(
+                  "Relevant Services",
+                  p(
+                    "Based on the needs identified in the SIS assessment, 
+                    the following services may be relevant in helping to address 
+                    identified needs:"
+                  ),
+                  selectInput(
+                    "svc_typ",
+                    "Service Type",
+                    levels(codemap$ServiceType),
+                    selected = "Care Coordination"
+                  ),
+                  dataTableOutput("ipos_svs")
+                ),
+                tabPanel(
                   "Potential Referrals",
                   p(
                     "Based on the needs identified in the SIS assessment, 
@@ -1239,17 +1278,17 @@ dashboardPage(
                   "Support Needs",
                   uiOutput('import'),
                   selectInput(
-                    "need_import_s1_measure",
+                    "need_import_q2_measure",
                     label = "Show the:",
                     choices = c("Number of people with need", 
                                 "Average level of need"), 
                     selected = "Number of people with need"
                   ),
-                  plotlyOutput("need_import_s1")
+                  plotlyOutput("need_import_q2")
                 ),
                 tabPanel(
                   "Important To/For",
-                  plotlyOutput("import_s1")
+                  plotlyOutput("import_q2")
                 ),
                 tabPanel(
                   "Protection",
@@ -1295,7 +1334,7 @@ dashboardPage(
                     tabPanel(
                       "Protection",
                       p(
-                        "Section II of the SIS (the Supplemental Protection and 
+                        "Section 3 of the SIS (the Supplemental Protection and 
                         Advocacy Scale) measures 8 activities such as: ",
                         em(
                           "self-advocacy, money management, protecting self from 
@@ -1309,7 +1348,11 @@ dashboardPage(
                         "The top 4 items in this section of the SIS are intended to 
                         be included in person-centered planning.  This graph shows 
                         which items most frequently make it to the", 
-                        em("top 4"), "list of clients in the selected agency."
+                        em("top 4"), "list of clients in the selected agency. The 
+                        ranking of top 4 items per person is done using a 
+                        methodology that includes ties, so that items where the 
+                        total score was the same across multiple questions are 
+                        all included in the list."
                       ),
                       p(
                         "CMHSPs may be interested in identifying how these areas 
@@ -1325,7 +1368,7 @@ dashboardPage(
           column(
             width = 12,
             box(
-              title = "Population Needs", 
+              title = "Patterns of Need", 
               status = "warning",
               collapsible = TRUE, 
               collapsed = TRUE,
@@ -1469,6 +1512,106 @@ dashboardPage(
                 )
               )
             )
+          ),
+          column(
+            width = 12,
+            box(
+              title = "Related Services (In development)", 
+              status = "warning",
+              collapsible = TRUE, 
+              collapsed = TRUE,
+              width = NULL,
+              tabBox(
+                width = NULL,
+                tabPanel(
+                  "Network Map",
+                  visNetworkOutput('sis_svc_ntwk')
+                ),
+                tabPanel(
+                  "About",
+                  p(
+                    "While assessment data such as the information from the 
+                    SIS can be helpful in painting a picture of the needs 
+                    that exist, people want to meet those needs with services 
+                    and practical solutions.  Questions like the following 
+                    continue to arise:",  
+                    em("How can we offer services which best address a person's 
+                       needs?  How can we provide people with relevant service 
+                       choices to supplement their natural supports and 
+                       relationships in the community?"),  
+                    "In order to even begin to answer these questions at a 
+                    population level, it is important to understand which 
+                    services may be relevant to meeting specific needs.  
+                    That's where this chart comes in.  It's a complex picture 
+                    to explore a complex set of questions..."
+                  ),
+                  strong("The network map:"),
+                  p(
+                    "Network maps show relationships between multiple pairs of items (", 
+                    em("called 'nodes' on the map, and represented by circles"),
+                    ").  A relationship between any two nodes is shown by a line 
+                    drawn between those nodes.  In this map, a personal need 
+                    identified by an item on the SIS (", em("blue node"),
+                    ") is shown as being related to any service (",
+                    em("yellow node"),") that could potentially address that need."
+                  ),
+                  p(
+                    "The nodes are organized based on their connection to each 
+                    other, which means needs that are not related to the same 
+                    services will not appear near one another.  This doesn't 
+                    mean that these needs (", 
+                    em("e.g. physical fitness and emotional well-being"), 
+                    ") aren't connected within an individual person's life, 
+                    just that they are not addressed using the same services."
+                  ),
+                  p(
+                    "On the network map here, the thickness of the line 
+                    connecting a need to a service corresponds to the number 
+                    of people who had this need identified on the SIS (",
+                    em("i.e. received a score of greater than zero"),
+                    ").  The size of a node indicates the number of other nodes 
+                    it is connected to.  You can hover over a line to see the 
+                    number of people that it represents and the average score 
+                    on that item.  You can also click on individual nodes to 
+                    highlight their relationships, and zoom in or out to inspect 
+                    details."
+                  ),
+                  strong("A few words about service mappings:"),
+                  p(
+                    "The mappings connect each SIS need (",
+                    em("i.e. each item from SIS sections 1-3"),
+                    ") to each HCPCS code that might be used to address that 
+                    need, either in full or in part.  Service codes are included 
+                    if they were provided within the state according to the most 
+                    recent Section 404 report.  A link does not imply 
+                    eligibility for a given service, but merely indicates that 
+                    the service might be relevant to help meet needs of this 
+                    type when they do meet eligibility criteria.  In instances 
+                    where the need was not related to a specific service but may 
+                    require coordination by a supports coordinator (",
+                    em("e.g. obtaining legal services"),
+                    "), case management codes were mapped as potentially 
+                    relevant."
+                  ),
+                  p(
+                    "These mappings are not intended to confine a person's 
+                    service options in any way, but to highlight services that 
+                    are personalized based on individual needs, for 
+                    consideration in person-centered planning."
+                  ),
+                  p(
+                    "Because each need is mapped to all services that could 
+                    possibly address it, the number of people with needs 
+                    related to a given services is greater than the number 
+                    who will use that service, since people are unlikely to 
+                    use all services connected to the need, but will instead 
+                    select from among these options.  It is also worth noting 
+                    that the services shown here may not be available within 
+                    every community."
+                  )
+                )
+              )
+            )
           )
         )
       ),
@@ -1558,6 +1701,16 @@ dashboardPage(
                     assessed.  This is one of a number of issues with data entry 
                     that may make it difficult to correctly map proximity to 
                     nearby resources."
+                  ),
+                  p(
+                    strong("No Important To"),
+                    "counts the number of assessments where no items were marked 
+                    as ", em("important to"), " the person being assessed."
+                  ),
+                  p(
+                    strong("No Important For"),
+                    "counts the number of assessments where no items were marked 
+                    as ", em("important for"), " the person being assessed."
                   )
                 )
               )
