@@ -250,3 +250,4 @@ pip-log.txt
 *.xlsx
 *.xls
 .Rproj.user
+*.zip
